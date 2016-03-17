@@ -1,2 +1,2 @@
 main :: IO ()
-main = putStrLn "Test suite not yet implemented"
+main = putStrLn "Something was changed: Test suite not yet implemented"
