@@ -14,6 +14,9 @@ extra-deps:
 - OpenGL-2.12.0.1
 - GLURaw-1.5.0.3
 - OpenGLRaw-2.5.5.0
+- GLUT-2.7.0.2
+- ObjectName-1.1.0.0
+- bmp-1.2.5.2
 
 # Override default flag values for local packages and extra-deps
 flags: {}
