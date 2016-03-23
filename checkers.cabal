@@ -5,7 +5,7 @@ description:         Please see README.md
 homepage:            http://github.com/cmc-haskell-2016/checkers#readme
 license:             BSD3
 license-file:        LICENSE
-author:              checkers Team
+author:              Untitled 1 Team
 maintainer:          checkers@example.com
 copyright:           2016 checkers Team
 category:            Experimental
@@ -16,7 +16,7 @@ cabal-version:       >=1.10
 library
   ghc-options: -Wall
   hs-source-dirs:      src
-  exposed-modules:     Lib
+  exposed-modules:     Lib, Types, World_processing, Graphics_processing
   build-depends:       base >= 4.7 && < 5, gloss >= 1.8.0, gloss-rendering == 1.9.3.*
   default-language:    Haskell2010
 
