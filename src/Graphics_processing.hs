@@ -11,6 +11,7 @@ import System.IO.Unsafe
 game_start :: IO ()
 game_start = play display_mode bg_color steps_per_second initial_world world_to_picture event_handler sim_step
 
+-- display configuration
 display_mode :: Display
 display_mode = InWindow
   "Checkers"  -- window title
@@ -36,20 +37,48 @@ event_handler _ w = w
 sim_step :: Float -> World -> World
 sim_step _ w = w
 
---------------------
+-- end of display configuration
 
 world_elements :: [Picture]
 world_elements
-  = add_board 8 False (-300) (200)
+  = add_board (-300) (200)
 
-add_board :: Int -> Bool -> Float -> Float -> [Picture] -- rows left -> black_needed -> x y -> result picture list
-add_board 0 _ _ _ = []
-add_board n black_needed x y = (add_row [] 8 black_needed x y) ++ (add_board (n - 1) (not black_needed) x (y - cell_offset))
+-- board drawing functions
+add_board :: Float -> Float -> [Picture] -- x -> y -> result picture list
+add_board x y
+  = add_raw 8 False x y
+
+add_raw :: Int -> Bool -> Float -> Float -> [Picture] -- rows left -> black_needed -> x -> y -> result picture list
+add_raw 0 _ _ _ = []
+add_raw n black_needed x y = (add_cell 8 black_needed x y) ++ (add_raw (n - 1) (not black_needed) x (y - cell_offset)) ++ (add_numbers 4 n x y)
 
 -- input picture list -> iterations left -> black cell needed -> x -> y -> result picture list
-add_row :: [Picture] -> Int -> Bool -> Float -> Float -> [Picture]
-add_row pic_list 0 _ _ _ = pic_list
-add_row pic_list n black_needed x y = (add_cell black_needed x y):(add_row (pic_list) (n - 1) (not black_needed) (x + cell_offset) y)
+add_cell :: Int -> Bool -> Float -> Float -> [Picture]
+add_cell 0 _ _ _ = []
+add_cell n black_needed x y = (cell black_needed x y):(add_cell (n - 1) (not black_needed) (x + cell_offset) y)
+
+cell_offset :: Float
+cell_offset = 50
+
+cell :: Bool -> Float -> Float -> Picture -- cell_is_black -> x -> y -> result picture
+cell True x y = Translate (x) (y)
+  $ Scale 0.5 0.5
+  $ unsafePerformIO (loadBMP "data/black.bmp")
+cell False x y = Translate (x) (y)
+  $ Scale 0.5 0.5
+  $ unsafePerformIO (loadBMP "data/white.bmp")
+
+add_numbers :: Int -> Int -> Float -> Float -> [Picture] -- steps_left -> raw_number -> x -> y
+add_numbers 0 _ _ _ = []
+add_numbers steps_left raw_number x y
+  = (Translate (if (mod raw_number 2) == 0 then (x + cell_offset - 20) else (x - 20)) (y+10)
+  $ Scale 0.125 0.125
+  $ Color red $ Text (show (4 * (8 - raw_number) + (4 - steps_left) + 1)))
+  : (add_numbers (steps_left - 1) raw_number (x + (2 * cell_offset)) y)
+
+
+-- end of board drawing functions
+
 
 -- picture1 :: Picture
 -- picture1
@@ -69,14 +98,3 @@ add_row pic_list n black_needed x y = (add_cell black_needed x y):(add_row (pic_
 --   = Translate (0) (-10) -- shift the text to the middle of the window
 --   $ Scale 2 2  -- display it double the original size
 --   $ unsafePerformIO (loadBMP "data/bg.bmp")
-
-cell_offset :: Float
-cell_offset = 50
-
-add_cell :: Bool -> Float -> Float -> Picture -- cell is black -> x -> y -> result picture
-add_cell True x y = Translate (x) (y)
-  $ Scale 0.5 0.5
-  $ unsafePerformIO (loadBMP "data/black.bmp")
-add_cell False x y = Translate (x) (y)
-  $ Scale 0.5 0.5
-  $ unsafePerformIO (loadBMP "data/white.bmp")
