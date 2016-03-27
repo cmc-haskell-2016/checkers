@@ -28,10 +28,10 @@ steps_per_second :: Int
 steps_per_second = 15
 
 initial_world :: World_object -- will be changed
-initial_world = (([], []), 1, "Hello World")
+initial_world = (([], []), (1, 0, 0), "Press any key to start")
 
 world_to_picture :: World_object -> Picture
-world_to_picture _ = Pictures world_elements
+world_to_picture world = Pictures (world_elements world)
 
 event_handler :: Event -> World_object -> World_object
 event_handler _ w = w
@@ -41,12 +41,34 @@ sim_step _ w = w
 
 -- end of display configuration
 
-world_elements :: [Picture]
-world_elements
-  = add_board (-300) (200)
+world_elements :: World_object -> [Picture]
+world_elements (checkers, state, alert_message)
+  = (add_board (-300) 200) ++ (add_infobar alert_message 200 25)
 
-add_infobar :: Float -> Float -> [Picture]
-add_infobar = undefined
+add_infobar :: Alert_message -> Screen_x_pos -> Screen_y_pos -> [Picture]
+add_infobar message x y
+  = (infobar_bg x y) : (infobar_title 135 190 "Checkers") : (infobar_text 100 50 message):[]
+
+infobar_title :: Screen_x_pos -> Screen_y_pos -> String -> Picture
+infobar_title x y message
+  = Translate x y
+  $ Scale 0.25 0.25
+  $ Color black
+  $ Text message
+
+
+infobar_text :: Screen_x_pos -> Screen_y_pos -> String -> Picture
+infobar_text x y message
+  = Translate x y
+  $ Scale 0.13 0.13
+  $ Color black
+  $ Text message
+
+infobar_bg :: Screen_x_pos -> Screen_y_pos -> Picture
+infobar_bg x y
+  = Translate x y
+  $ Scale 2 4
+  $ unsafePerformIO (loadBMP "data/white.bmp")
 
 ------- board drawing functions
 
