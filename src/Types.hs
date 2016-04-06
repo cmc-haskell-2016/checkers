@@ -1,7 +1,7 @@
 module Types where
 
 type World_object = (Checkers, State, Alert_message)
-type State = (Int, Int, Int) -- player id, checker chosen, position to move chosen
+type State = (Int, Int, Int, Bool) -- player id, checker chosen, position to move chosen, if checker has already been chosen
 type Alert_message = String
 type Checkers = ([Checker], [Checker]) -- white and black checkers (won't change their order)
 type Checker = (Checkerboard_pos, Is_alive, Is_king)

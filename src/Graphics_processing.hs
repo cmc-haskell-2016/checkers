@@ -28,7 +28,7 @@ steps_per_second :: Int
 steps_per_second = 15
 
 initial_world :: World_object -- will be changed
-initial_world = (([], []), (1, 0, 0), "Press any key to start")
+initial_world = (([], []), (1, 0, 0, False), "Press any key to start")
 
 world_to_picture :: World_object -> Picture
 world_to_picture world = Pictures (world_elements world)
@@ -113,8 +113,9 @@ add_numbers 0 _ _ _ = []
 add_numbers steps_left raw_number x y
   = (Translate (x + number_x_offset + if (mod raw_number 2) == 0 then  cell_offset else 0) (y + number_y_offset)
   $ Scale 0.125 0.125
-  $ Color red $ Text (show (4 * (8 - raw_number) + (4 - steps_left) + 1)))
+  $ Color red $ Text (show number))
     : (add_numbers (steps_left - 1) raw_number (x + (2 * cell_offset)) y)
+    where number = (4 * (8 - raw_number) + (4 - steps_left) + 1)
 
 ------- end of board drawing functions
 
