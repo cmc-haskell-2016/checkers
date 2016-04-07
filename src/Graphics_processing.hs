@@ -28,12 +28,15 @@ steps_per_second :: Int
 steps_per_second = 15
 
 initial_world :: World_object -- will be changed
-initial_world = (([], []), (1, 0, 0, False), "Press any key to start")
+initial_world = (([], []), (1, 1, 1, False), "Press any key to start")
 
 world_to_picture :: World_object -> Picture
 world_to_picture world = Pictures (world_elements world)
 
 event_handler :: Event -> World_object -> World_object
+event_handler (EventKey (SpecialKey KeyUp) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message) = (checkers, (player_id, (mod (checker_chosen + 32 - 4) 32), pos_to_move_chosen, False), alert_message)
+-- event_handler (EventKey (SpecialKey KeyUp) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message) = (checkers, (player_id, (mod (checker_chosen + 32 - 4) 32), pos_to_move_chosen, False), alert_message)
+-- event_handler (EventKey (SpecialKey KeyUp) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), alert_message) = (EventKey (SpecialKey KeyUp) Down _ _) (checkers, (player_id, checker_chosen, (mod (pos_to_move_chosen + 32 - 4) 32), True), alert_message)
 event_handler _ w = w
 
 sim_step :: Float -> World_object -> World_object
@@ -43,7 +46,7 @@ sim_step _ w = w
 
 world_elements :: World_object -> [Picture]
 world_elements (checkers, state, alert_message)
-  = (add_board (-300) 200) ++ (add_infobar alert_message 200 25)
+  = (add_board (-300) 200 state) ++ (add_infobar alert_message 200 25)
 
 add_infobar :: Alert_message -> Screen_x_pos -> Screen_y_pos -> [Picture]
 add_infobar message x y
@@ -73,14 +76,14 @@ infobar_bg x y
 ------- board drawing functions
 
 -- x_start -> y_start -> result_picture_list
-add_board :: Screen_x_pos -> Screen_y_pos -> [Picture]
-add_board x y
-  = add_raw 8 False x y
+add_board :: Screen_x_pos -> Screen_y_pos -> State -> [Picture]
+add_board x y state
+  = add_raw 8 False x y state
 
 -- rows left -> black_color -> x -> y -> result_picture_list
-add_raw :: Int -> Bool -> Screen_x_pos -> Screen_y_pos -> [Picture]
-add_raw 0 _ _ _ = []
-add_raw n black_needed x y = (add_cell 8 black_needed x y) ++ (add_raw (n - 1) (not black_needed) x (y - cell_offset)) ++ (add_numbers 4 n x y)
+add_raw :: Int -> Bool -> Screen_x_pos -> Screen_y_pos -> State -> [Picture]
+add_raw 0 _ _ _ _ = []
+add_raw n black_needed x y state = (add_cell 8 black_needed x y) ++ (add_raw (n - 1) (not black_needed) x (y - cell_offset) state) ++ (add_numbers 4 n x y state)
 
 -- cell_offset is equal to cell size (because one cell goes just after another in the row)
 cell_offset :: Float
@@ -107,14 +110,14 @@ number_x_offset = -20
 number_y_offset :: Screen_y_pos
 number_y_offset = 10
 
--- steps_left -> raw_number -> x -> y
-add_numbers :: Int -> Int -> Screen_x_pos -> Screen_y_pos -> [Picture]
-add_numbers 0 _ _ _ = []
-add_numbers steps_left raw_number x y
+-- steps_left -> raw_number -> x -> y -> state
+add_numbers :: Int -> Int -> Screen_x_pos -> Screen_y_pos -> State -> [Picture]
+add_numbers 0 _ _ _ _ = []
+add_numbers steps_left raw_number x y (player_id, first_pos, second_pos, first_chosen)
   = (Translate (x + number_x_offset + if (mod raw_number 2) == 0 then  cell_offset else 0) (y + number_y_offset)
   $ Scale 0.125 0.125
-  $ Color red $ Text (show number))
-    : (add_numbers (steps_left - 1) raw_number (x + (2 * cell_offset)) y)
+  $ Color red $ Text ((show number) ++ (if number == first_pos then "*" else "") ++ (if (first_chosen && (number == second_pos)) then "#" else "")))
+    : (add_numbers (steps_left - 1) raw_number (x + (2 * cell_offset)) y (player_id, first_pos, second_pos, first_chosen))
     where number = (4 * (8 - raw_number) + (4 - steps_left) + 1)
 
 ------- end of board drawing functions
