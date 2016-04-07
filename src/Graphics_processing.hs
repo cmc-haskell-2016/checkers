@@ -1,6 +1,7 @@
 module Graphics_processing (game_start) where
 
 import Types
+import World_processing
 
 import Graphics.Gloss
 import Graphics.Gloss.Interface.Pure.Game
@@ -28,7 +29,7 @@ steps_per_second :: Int
 steps_per_second = 15
 
 initial_world :: World_object -- will be changed
-initial_world = (([], []), (1, 1, 1, False), "Press any key to start")
+initial_world = (create_checkers_object, (1, 1, 1, False), "Press any key to start")
 
 world_to_picture :: World_object -> Picture
 world_to_picture world = Pictures (world_elements world)
@@ -46,7 +47,7 @@ sim_step _ w = w
 
 world_elements :: World_object -> [Picture]
 world_elements (checkers, state, alert_message)
-  = (add_board (-300) 200 state) ++ (add_infobar alert_message 200 25)
+  = (add_board (-300) 200 checkers state) ++ (add_infobar alert_message 200 25)
 
 add_infobar :: Alert_message -> Screen_x_pos -> Screen_y_pos -> [Picture]
 add_infobar message x y
@@ -76,14 +77,14 @@ infobar_bg x y
 ------- board drawing functions
 
 -- x_start -> y_start -> result_picture_list
-add_board :: Screen_x_pos -> Screen_y_pos -> State -> [Picture]
-add_board x y state
-  = add_raw 8 False x y state
+add_board :: Screen_x_pos -> Screen_y_pos -> Checkers -> State -> [Picture]
+add_board x y checkers state
+  = add_raw 8 False x y checkers state
 
 -- rows left -> black_color -> x -> y -> result_picture_list
-add_raw :: Int -> Bool -> Screen_x_pos -> Screen_y_pos -> State -> [Picture]
-add_raw 0 _ _ _ _ = []
-add_raw n black_needed x y state = (add_cell 8 black_needed x y) ++ (add_raw (n - 1) (not black_needed) x (y - cell_offset) state) ++ (add_numbers 4 n x y state)
+add_raw :: Int -> Bool -> Screen_x_pos -> Screen_y_pos -> Checkers -> State -> [Picture]
+add_raw 0 _ _ _ _ _ = []
+add_raw n black_needed x y checkers state = (add_cell 8 black_needed x y) ++ (add_raw (n - 1) (not black_needed) x (y - cell_offset) checkers state) ++ (add_checkers 4 n x y checkers) ++ (add_numbers 4 n x y state)
 
 -- cell_offset is equal to cell size (because one cell goes just after another in the row)
 cell_offset :: Float
@@ -116,9 +117,29 @@ add_numbers 0 _ _ _ _ = []
 add_numbers steps_left raw_number x y (player_id, first_pos, second_pos, first_chosen)
   = (Translate (x + number_x_offset + if (mod raw_number 2) == 0 then  cell_offset else 0) (y + number_y_offset)
   $ Scale 0.125 0.125
-  $ Color red $ Text ((show number) ++ (if number == first_pos then "*" else "") ++ (if (first_chosen && (number == second_pos)) then "#" else "")))
-    : (add_numbers (steps_left - 1) raw_number (x + (2 * cell_offset)) y (player_id, first_pos, second_pos, first_chosen))
-    where number = (4 * (8 - raw_number) + (4 - steps_left) + 1)
+  $ Color red $ Text ((show number)
+    ++ (if number == first_pos then "*" else "")
+    ++ (if (first_chosen && (number == second_pos)) then "#" else "")))
+      : (add_numbers (steps_left - 1) raw_number (x + (2 * cell_offset)) y (player_id, first_pos, second_pos, first_chosen))
+      where number = (4 * (8 - raw_number) + (4 - steps_left) + 1)
+
+-- offset from top left corner of the cell. Needed for drawing checkers on the cells
+checker_x_offset :: Screen_x_pos
+checker_x_offset = 0
+
+checker_y_offset :: Screen_y_pos
+checker_y_offset = 0
+
+-- steps_left -> raw_number -> x -> y
+add_checkers :: Int -> Int -> Screen_x_pos -> Screen_y_pos -> Checkers -> [Picture]
+add_checkers 0 _ _ _ _ = []
+add_checkers steps_left raw_number x y checkers
+   = (Translate (x + checker_x_offset + if (mod raw_number 2) == 0 then  cell_offset else 0) (y + checker_y_offset)
+   $ Scale 1 1
+   $ Color (if (is_there_checker number checkers (1, 0, 0, False)) then white else (if (is_there_checker number checkers (2, 0, 0, False)) then bg_color else black))
+   $ ThickCircle 12 12)
+      : add_checkers (steps_left - 1) raw_number (x + (2 * cell_offset)) y checkers
+      where number = (4 * (8 - raw_number) + (4 - steps_left) + 1)
 
 ------- end of board drawing functions
 

@@ -1,6 +1,6 @@
 module Main where
 
-import Lib
+-- import Lib
 import Types
 import World_processing
 import Graphics_processing
