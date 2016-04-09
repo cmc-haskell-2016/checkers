@@ -35,9 +35,38 @@ world_to_picture :: World_object -> Picture
 world_to_picture world = Pictures (world_elements world)
 
 event_handler :: Event -> World_object -> World_object
-event_handler (EventKey (SpecialKey KeyUp) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message) = (checkers, (player_id, (mod (checker_chosen + 32 - 4) 32), pos_to_move_chosen, False), alert_message)
--- event_handler (EventKey (SpecialKey KeyUp) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message) = (checkers, (player_id, (mod (checker_chosen + 32 - 4) 32), pos_to_move_chosen, False), alert_message)
--- event_handler (EventKey (SpecialKey KeyUp) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), alert_message) = (EventKey (SpecialKey KeyUp) Down _ _) (checkers, (player_id, checker_chosen, (mod (pos_to_move_chosen + 32 - 4) 32), True), alert_message)
+event_handler (EventKey (SpecialKey KeyUp) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message) =
+  (checkers, (player_id, (mod (checker_chosen + 32 - 4) 32), pos_to_move_chosen, False), alert_message)
+
+event_handler (EventKey (SpecialKey KeyDown) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message) =
+  (checkers, (player_id, (mod (checker_chosen + 32 + 4) 32), pos_to_move_chosen, False), alert_message)
+
+event_handler (EventKey (SpecialKey KeyLeft) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message) =
+  (checkers, (player_id, (mod (checker_chosen + 32 - 1) 32), pos_to_move_chosen, False), alert_message)
+
+event_handler (EventKey (SpecialKey KeyRight) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message) =
+  (checkers, (player_id, (mod (checker_chosen + 32 + 1) 32), pos_to_move_chosen, False), alert_message)
+
+
+event_handler (EventKey (SpecialKey KeyUp) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), alert_message) =
+  (checkers, (player_id, checker_chosen, (mod (pos_to_move_chosen + 32 - 4) 32), True), alert_message)
+
+event_handler (EventKey (SpecialKey KeyDown) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), alert_message) =
+  (checkers, (player_id, checker_chosen, (mod (pos_to_move_chosen + 32 + 4) 32), True), alert_message)
+
+event_handler (EventKey (SpecialKey KeyLeft) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), alert_message) =
+  (checkers, (player_id, checker_chosen, (mod (pos_to_move_chosen + 32 - 1) 32), True), alert_message)
+
+event_handler (EventKey (SpecialKey KeyRight) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), alert_message) =
+  (checkers, (player_id, checker_chosen, (mod (pos_to_move_chosen + 32 + 1) 32), True), alert_message)
+
+event_handler (EventKey (SpecialKey KeyEnter) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message) =
+  (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), alert_message)
+
+-- positions are chosen
+event_handler (EventKey (SpecialKey KeyEnter) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), alert_message) =
+  (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message)
+
 event_handler _ w = w
 
 sim_step :: Float -> World_object -> World_object
