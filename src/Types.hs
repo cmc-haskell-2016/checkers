@@ -8,3 +8,5 @@ type Checker = (Checkerboard_pos, Is_alive, Is_king)
 type Checkerboard_pos = Int
 type Is_alive = Bool
 type Is_king = Bool
+
+type Way = ([Checkerboard_pos], [Checkerboard_pos]) --first is for all the positions, that checker go, second is for all eaten checkers positions
