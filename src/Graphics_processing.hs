@@ -29,7 +29,7 @@ steps_per_second :: Int
 steps_per_second = 15
 
 initial_world :: World_object -- will be changed
-initial_world = (create_checkers_object, (1, 1, 1, False), "Press any key to start")
+initial_world = (create_checkers_object, (1, 1, 1, False), "Choose checker to move")
 
 world_to_picture :: World_object -> Picture
 world_to_picture world = Pictures (world_elements world)
@@ -61,7 +61,9 @@ event_handler (EventKey (SpecialKey KeyRight) Down _ _) (checkers, (player_id, c
   (checkers, (player_id, checker_chosen, (mod (pos_to_move_chosen + 32 + 1) 32), True), alert_message)
 
 event_handler (EventKey (SpecialKey KeyEnter) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message) =
-  (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), alert_message)
+  if (is_there_checker checker_chosen checkers (player_id, checker_chosen, pos_to_move_chosen, False))
+    then (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), "Choose position to move checker to")
+    else (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), "Incorrect. Choose checker to move")
 
 -- positions are chosen
 event_handler (EventKey (SpecialKey KeyEnter) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), alert_message) =
