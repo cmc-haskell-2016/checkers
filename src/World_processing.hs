@@ -42,21 +42,21 @@ nearest_unplayable_pos (x:xs) list | (check_pos x list) = x:nearest_unplayable_p
 -- transform list into list of ways (example: [1,2,3] ==> [([1],[]),([2],[]),([3],[])]    )
 make_poslist ::	[Checkerboard_pos]->[Way]
 make_poslist [] = []
-make_poslist (x:xs) = [([x],[])] : (make_poslist xs)
+make_poslist (x:xs) = ([x],[]) : (make_poslist xs)
 
-playable_checker :: Checkers -> State -> [Checker]
-playable_checker (first, second) stateId = if (stateId == 1) then first else second
+playable_checker :: Checkers -> Int -> [Checker]
+playable_checker (first, second) stateId = if stateId == 1 then first else second
 
-unplayable_checker :: Checkers -> State -> [Checker]
-unplayable_checker (first, second) stateId = if (stateId == 1) then second else first
+unplayable_checker :: Checkers -> Int -> [Checker]
+unplayable_checker (first, second) stateId = if stateId == 1 then second else first
 
 -- List of possible moves from the position given as the first argument
 possible_moves :: Checkerboard_pos -> Checkers -> State -> [Way]
-possible_moves x ch_cortege stateId | playable == [] = []
-                                         | unplayable == [] = make_poslist playable
-    								     | otherwise = undefined
-      							         where playable = (nearest_reachable_pos (nearest_positions x) (playable_checker ch_cortege stateId)) -- !!!!the list of all positions around except those where stayed another playable checkers
-        						               unplayable = (nearest_unplayable_pos playable (playable_checker ch_cortege stateId))-- !!!!the list of all the unplayable checkers that can be eaten
+possible_moves x ch_cortege (stateId, _, _, _) | playable == [] = []
+                                               | unplayable == [] = make_poslist playable
+    								           | otherwise = undefined
+      							               where playable = (nearest_reachable_pos (nearest_positions x) (playable_checker ch_cortege stateId)) -- !!!!the list of all positions around except those where stayed another playable checkers
+        						                     unplayable = (nearest_unplayable_pos playable (playable_checker ch_cortege stateId))-- !!!!the list of all the unplayable checkers that can be eaten
 
                                                
 -- Makes a move (may be recursive) and builds new Checkers object
