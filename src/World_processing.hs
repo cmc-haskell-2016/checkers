@@ -36,25 +36,29 @@ nearest_reachable_pos  (x:xs) list | (check_pos x list) = nearest_reachable_pos 
 --finds all unplayable nearest checker
 nearest_unplayable_pos :: [Checkerboard_pos]->[Checker]->[Checkerboard_pos]
 nearest_unplayable_pos [] _ = []
-nearest_unplayable_pos x:xs list | (check_pos x list) = x:nearest_unplayable_pos xs list
+nearest_unplayable_pos (x:xs) list | (check_pos x list) = x:nearest_unplayable_pos xs list
                                      | otherwise = nearest_unplayable_pos xs list
-
--- transform list into list of list (example: [1,2,3] ==> [[1],[2],[3]])
+          
+-- transform list into list of ways (example: [1,2,3] ==> [([1],[]),([2],[]),([3],[])]    )
 make_poslist ::	[Checkerboard_pos]->[Way]
 make_poslist [] = []
-make_poslist x:xs = [([x][])] : make_poslist xs
+make_poslist (x:xs) = ([x],[]) : (make_poslist xs)
+
+playable_checker :: Checkers -> Int -> [Checker]
+playable_checker (first, second) stateId = if stateId == 1 then first else second
+
+unplayable_checker :: Checkers -> Int -> [Checker]
+unplayable_checker (first, second) stateId = if stateId == 1 then second else first
 
 -- List of possible moves from the position given as the first argument
 possible_moves :: Checkerboard_pos -> Checkers -> State -> [Way]
-possible_moves x (first, second) stateId | playable == [] = []
-                                         | unplayable_list == [] = make_poslist playable
-    								     | otherwise = undefined
-      							         where list_of_pos = nearest_positions x -- all positions around the checker
-        						         playable_list = if stateId == 1 then first else second -- the list of all playable checkers
-          				        	     unplayable_list = if stateId == 1 then second else first -- the opposite
-            	        			     playable = nearest_reachable_pos list_of_pos playable_list -- the list of all positions around except those where stayed another playable checkers
-                			             unplayable = nearest_unplayable_pos playable -- the list of all the unplayable checkers that can be eaten
+possible_moves x ch_cortege (stateId, _, _, _) | playable == [] = []
+                                               | unplayable == [] = make_poslist playable
+    								           | otherwise = undefined
+      							               where playable = (nearest_reachable_pos (nearest_positions x) (playable_checker ch_cortege stateId)) -- !!!!the list of all positions around except those where stayed another playable checkers
+        						                     unplayable = (nearest_unplayable_pos playable (playable_checker ch_cortege stateId))-- !!!!the list of all the unplayable checkers that can be eaten
 
+                                               
 -- Makes a move (may be recursive) and builds new Checkers object
 make_move :: Checkerboard_pos -> Checkerboard_pos -> Checkers -> State -> Checkers
 make_move = undefined
