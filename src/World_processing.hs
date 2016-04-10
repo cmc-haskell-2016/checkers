@@ -38,9 +38,9 @@ nearest_unplayable_pos :: [Checkerboard_pos]->[Checker]->[Checkerboard_pos]
 nearest_unplayable_pos [] _ = []
 nearest_unplayable_pos (x:xs) list | (check_pos x list) = x:nearest_unplayable_pos xs list
                                      | otherwise = nearest_unplayable_pos xs list
-          
+
 -- transform list into list of ways (example: [1,2,3] ==> [([1],[]),([2],[]),([3],[])]    )
-make_poslist ::	[Checkerboard_pos]->[Way]
+make_poslist :: [Checkerboard_pos]->[Way]
 make_poslist [] = []
 make_poslist (x:xs) = ([x],[]) : (make_poslist xs)
 
@@ -54,11 +54,11 @@ unplayable_checker (first, second) stateId = if stateId == 1 then second else fi
 possible_moves :: Checkerboard_pos -> Checkers -> State -> [Way]
 possible_moves x ch_cortege (stateId, _, _, _) | playable == [] = []
                                                | unplayable == [] = make_poslist playable
-    								           | otherwise = undefined
-      							               where playable = (nearest_reachable_pos (nearest_positions x) (playable_checker ch_cortege stateId)) -- !!!!the list of all positions around except those where stayed another playable checkers
-        						                     unplayable = (nearest_unplayable_pos playable (playable_checker ch_cortege stateId))-- !!!!the list of all the unplayable checkers that can be eaten
+                               | otherwise = undefined
+                                   where playable = (nearest_reachable_pos (nearest_positions x) (playable_checker ch_cortege stateId)) -- !!!!the list of all positions around except those where stayed another playable checkers
+                                         unplayable = (nearest_unplayable_pos playable (playable_checker ch_cortege stateId))-- !!!!the list of all the unplayable checkers that can be eaten
 
-                                               
+
 -- Makes a move (may be recursive) and builds new Checkers object
 make_move :: Checkerboard_pos -> Checkerboard_pos -> Checkers -> State -> Checkers
 make_move = undefined
