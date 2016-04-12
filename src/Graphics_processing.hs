@@ -76,13 +76,25 @@ sim_step _ w = w
 
 -- end of display configuration
 
+board_x_offset :: Screen_x_pos
+board_x_offset = -180
+
+board_y_offset :: Screen_y_pos
+board_y_offset = 125
+
+infobar_x_offset :: Screen_x_pos
+infobar_x_offset = 0
+
+infobar_y_offset :: Screen_y_pos
+infobar_y_offset = 250
+
 world_elements :: World_object -> [Picture]
 world_elements (checkers, state, alert_message)
-  = (add_board (-300) 200 checkers state) ++ (add_infobar alert_message 200 25)
+  = (add_board board_x_offset board_y_offset checkers state) ++ (add_infobar state alert_message infobar_x_offset infobar_y_offset)
 
-add_infobar :: Alert_message -> Screen_x_pos -> Screen_y_pos -> [Picture]
-add_infobar message x y
-  = (infobar_bg x y) : (infobar_title 135 190 "Checkers") : (infobar_text 100 50 message):[]
+add_infobar :: State -> Alert_message -> Screen_x_pos -> Screen_y_pos -> [Picture]
+add_infobar state message x y
+  = (infobar_bg x y) : (infobar_title (x - 50) (y + 20) "Checkers") : (infobar_text (x - 220) (y - 10) ("move of the player "  ++ (show state))) : (infobar_text (x - 220) (y - 50) message) : []
 
 infobar_title :: Screen_x_pos -> Screen_y_pos -> String -> Picture
 infobar_title x y message
@@ -102,7 +114,7 @@ infobar_text x y message
 infobar_bg :: Screen_x_pos -> Screen_y_pos -> Picture
 infobar_bg x y
   = Translate x y
-  $ Scale 2 4
+  $ Scale 6 1.5
   $ unsafePerformIO (loadBMP "data/white.bmp")
 
 ------- board drawing functions
