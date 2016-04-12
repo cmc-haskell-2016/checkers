@@ -1,4 +1,4 @@
-module World_processing (create_checkers_object, is_there_checker, game_move) where
+module World_processing (create_checkers_object, is_there_checker, game_move, if_king) where
 
 import Types
 
@@ -99,7 +99,7 @@ make_poslist_eat ((x,y):xs) = ([y],[x]):(make_poslist_eat xs)
 king_make_poslist :: Way2 -> [Way]
 king_make_poslist [] = []
 king_make_poslist ((x,y):xs) | y == 0 = ([x], []):(king_make_poslist xs)
-                             | otherwise = ([y], [x]):(king_make_poslist xs)
+                             | otherwise = ([x], [y]):(king_make_poslist xs)
 
 playable_checker :: Checkers -> Int -> [Checker]
 playable_checker (first, second) stateId = if stateId == 1 then first else second
@@ -146,6 +146,12 @@ possible_moves_king x ch_cortege (stateId, _, _, _) = (king_make_poslist (king_m
 possible_moves :: Checkerboard_pos ->  Checkers -> State -> [Way]
 possible_moves x ch_cortege  stateId | (if_king  x ch_cortege  stateId) = possible_moves_king   x ch_cortege  stateId
                                          | otherwise =  checker_possible_moves x ch_cortege  stateId
+                                         
+isOnIdEdge :: Checkerboard_pos -> Int -> Bool
+isOnIdEdge pos playerId
+        | playerId == 1 && pos >= 29 = True
+        | playerId /= 1 && pos <= 4 = True
+        | otherwise = False
 
 --actually shiftes a checker according to the player's move
 change_pos :: Checkerboard_pos -> Checkerboard_pos -> Int -> Checkers -> Checkers
@@ -153,7 +159,7 @@ change_pos start_pos dist_pos playerId checker_set
                 | playerId == 1 =
                       (map
                         (\(pos, isAlive, isKing) -> if pos == start_pos
-                                                        then (dist_pos, True, isKing)
+                                                        then (dist_pos, True, isKing || isOnIdEdge dist_pos playerId)
                                                         else (pos, isAlive, isKing)
                         )
                         (fst checker_set),
@@ -162,7 +168,7 @@ change_pos start_pos dist_pos playerId checker_set
                       (fst checker_set,
                         map
                         (\(pos, isAlive, isKing) -> if pos == start_pos
-                                                        then (dist_pos, True, isKing)
+                                                        then (dist_pos, True, isKing || isOnIdEdge dist_pos playerId)
                                                         else (pos, isAlive, isKing)
                         )
                         (snd checker_set))
