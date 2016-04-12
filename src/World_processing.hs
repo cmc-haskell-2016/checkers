@@ -233,7 +233,9 @@ if_player_has_moves playerId checker_set
 
 if_game_over :: World_object -> Bool
 if_game_over (checker_set, (playerId, _, _, _), _)
-        | if_player_has_moves playerId checker_set = False
+        | if_player_has_moves playerId checker_set &&
+            (any (\(_, isAlive, _) -> isAlive) (if playerId == 1 then (snd checker_set) else (fst checker_set)) )
+             = False
         | otherwise = True
            -- where id_func = if playerId == 1 then fst else snd
 

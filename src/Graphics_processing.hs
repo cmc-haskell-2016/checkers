@@ -185,7 +185,7 @@ checker_y_offset = 0
 -- Color of the checker construct
 
 white_checker_color :: Bool -> Color
-white_checker_color True = makeColor 0.8 0.8 1.0 1
+white_checker_color True = makeColor 0.8 1.0 0.8 1
 white_checker_color False = white
 
 black_checker_color :: Bool -> Color
