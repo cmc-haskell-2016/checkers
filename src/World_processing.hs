@@ -31,21 +31,21 @@ left_down x | (x == 5) || (x == 13) || (x == 21) = 0
 left_up :: Checkerboard_pos -> Checkerboard_pos
 left_up x | (x == 5) || (x == 13) || (x == 21) || (x == 29) = 0
           | (x == 1) || (x == 2) || (x == 3) || (x == 4) = 0
-            | (mod x 8) < 5 = x-4
+            | (mod x 8) < 5 && (mod x 8) > 0 = x-4
             | otherwise = x-5
 --  >
 -- /           
 right_up :: Checkerboard_pos -> Checkerboard_pos
 right_up x | (x == 12) || (x == 20) || (x == 28) = 0
           | (x == 1) || (x == 2) || (x == 3) || (x == 4) = 0
-          | (mod x 8) < 5 = x-3
+          | (mod x 8) < 5 && (mod x 8) > 0 = x-3
           | otherwise = x-4
 -- \
 --  > 
 right_down :: Checkerboard_pos -> Checkerboard_pos
 right_down x | (x == 4) || (x == 12) || (x == 20) || (x == 28) = 0
           | (x == 29) || (x == 30) || (x == 31) || (x == 32) = 0
-          | (mod x 8) < 5 = x+5
+          | (mod x 8) < 5 && (mod x 8) > 0 = x+5
           | otherwise = x+4
           
 eat_checker :: (Checkerboard_pos -> Checkerboard_pos) -> Checkerboard_pos -> (Checkerboard_pos, Checkerboard_pos)
@@ -99,7 +99,7 @@ make_poslist_eat ((x,y):xs) = ([y],[x]):(make_poslist_eat xs)
 king_make_poslist :: Way2 -> [Way]
 king_make_poslist [] = []
 king_make_poslist ((x,y):xs) | y == 0 = ([x], []):(king_make_poslist xs)
-                             | otherwise = ([x], [y]):(king_make_poslist xs)
+                             | otherwise = ([y], [x]):(king_make_poslist xs)
                              
 playable_checker :: Checkers -> Int -> [Checker]
 playable_checker (first, second) stateId = if stateId == 1 then first else second
@@ -225,8 +225,14 @@ if_player_has_moves playerId checker_set
                                                 else [] )
                         (if playerId == 1 then fst checker_set else snd checker_set)
         
-if_game_over :: World_object -> (Bool, Alert_message)
+if_game_over :: World_object -> Bool
 if_game_over (checker_set, (playerId, _, _, _), _)
-        | if_player_has_moves playerId checker_set = (False, "")
-        | otherwise = (True, "Game is over")
+        | if_player_has_moves playerId checker_set = False
+        | otherwise = True
            -- where id_func = if playerId == 1 then fst else snd
+           
+game_cycle :: World_object -> World_object
+game_cycle (checker_set (playerId, checkerChosen, posToMove, ifChosen) _) =
+            if if_game_over checker_set (playerId, checkerChosen, posToMove, ifChosen) _ 
+                    then (checker_set, (playerId, checkerChosen, posToMove, ifChosen), "Player " ++ show playerId ++ "lost")
+                    else game_cycle (make_move checkerChosen posToMove checker_set (playerId, checkerChosen, posToMove, ifChosen))
