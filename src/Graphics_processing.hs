@@ -26,9 +26,9 @@ bg_color :: Color
 bg_color = makeColor 0.7 0.7 0.8 1
 
 steps_per_second :: Int
-steps_per_second = 15
+steps_per_second = 5
 
-initial_world :: World_object -- will be changed
+initial_world :: World_object
 initial_world = (create_checkers_object, (1, 1, 1, False), "Choose checker to move")
 
 world_to_picture :: World_object -> Picture
@@ -47,7 +47,6 @@ event_handler (EventKey (SpecialKey KeyLeft) Down _ _) (checkers, (player_id, ch
 event_handler (EventKey (SpecialKey KeyRight) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message) =
   (checkers, (player_id, (mod (checker_chosen + 32 + 1) 32), pos_to_move_chosen, False), alert_message)
 
-
 event_handler (EventKey (SpecialKey KeyUp) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), alert_message) =
   (checkers, (player_id, checker_chosen, (mod (pos_to_move_chosen + 32 - 4) 32), True), alert_message)
 
@@ -60,17 +59,19 @@ event_handler (EventKey (SpecialKey KeyLeft) Down _ _) (checkers, (player_id, ch
 event_handler (EventKey (SpecialKey KeyRight) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), alert_message) =
   (checkers, (player_id, checker_chosen, (mod (pos_to_move_chosen + 32 + 1) 32), True), alert_message)
 
+-- Testing the position if there is a checker of the player to move. Game continues according to the result
 event_handler (EventKey (SpecialKey KeyEnter) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message) =
   if (is_there_checker checker_chosen checkers (player_id, checker_chosen, pos_to_move_chosen, False))
     then (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), "Choose position to move checker to")
     else (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), "Incorrect. Choose checker to move")
 
--- positions are chosen
+-- positions are chosen. The turn starts
 event_handler (EventKey (SpecialKey KeyEnter) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), alert_message) =
   (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message)
 
 event_handler _ w = w
 
+-- the world is static. No need to change it according to the playing time
 sim_step :: Float -> World_object -> World_object
 sim_step _ w = w
 
@@ -88,6 +89,7 @@ infobar_x_offset = 0
 infobar_y_offset :: Screen_y_pos
 infobar_y_offset = 250
 
+-- collecting pictures to display
 world_elements :: World_object -> [Picture]
 world_elements (checkers, state, alert_message)
   = (add_board board_x_offset board_y_offset checkers state) ++ (add_infobar state alert_message infobar_x_offset infobar_y_offset)
@@ -122,23 +124,23 @@ infobar_bg x y
 -- x_start -> y_start -> result_picture_list
 add_board :: Screen_x_pos -> Screen_y_pos -> Checkers -> State -> [Picture]
 add_board x y checkers state
-  = add_raw 8 False x y checkers state
+  = add_row 8 False x y checkers state
 
--- rows left -> black_color -> x -> y -> result_picture_list
-add_raw :: Int -> Bool -> Screen_x_pos -> Screen_y_pos -> Checkers -> State -> [Picture]
-add_raw 0 _ _ _ _ _ = []
-add_raw n black_needed x y checkers state = (add_cell 8 black_needed x y) ++ (add_raw (n - 1) (not black_needed) x (y - cell_offset) checkers state) ++ (add_checkers 4 n x y checkers) ++ (add_numbers 4 n x y state)
+-- Adding raws recursively: raws left -> black_color -> x -> y -> result_picture_list
+add_row :: Int -> Bool -> Screen_x_pos -> Screen_y_pos -> Checkers -> State -> [Picture]
+add_row 0 _ _ _ _ _ = []
+add_row n black_needed x y checkers state = (add_cell 8 black_needed x y) ++ (add_row (n - 1) (not black_needed) x (y - cell_offset) checkers state) ++ (add_checkers 4 n x y checkers) ++ (add_numbers 4 n x y state)
 
 -- cell_offset is equal to cell size (because one cell goes just after another in the row)
 cell_offset :: Float
 cell_offset = 50
 
--- iterations left -> black_cell_is_needed -> x -> y -> result_picture_list
+-- Adding cells recursively: iterations left -> black_cell_is_needed -> x -> y -> result_picture_list
 add_cell :: Int -> Bool -> Screen_x_pos -> Screen_y_pos -> [Picture]
 add_cell 0 _ _ _ = []
 add_cell n black_needed x y = (cell black_needed x y):(add_cell (n - 1) (not black_needed) (x + cell_offset) y)
 
--- cell_is_black -> x -> y -> result picture
+-- Adding one cell: cell_is_black -> x -> y -> result picture
 cell :: Bool -> Screen_x_pos -> Screen_y_pos -> Picture
 cell True x y = Translate (x) (y)
   $ Scale 0.5 0.5
@@ -154,7 +156,7 @@ number_x_offset = -20
 number_y_offset :: Screen_y_pos
 number_y_offset = 10
 
--- steps_left -> raw_number -> x -> y -> state
+-- Adding numbers recursively: steps_left -> raw_number -> x -> y -> state
 add_numbers :: Int -> Int -> Screen_x_pos -> Screen_y_pos -> State -> [Picture]
 add_numbers 0 _ _ _ _ = []
 add_numbers steps_left raw_number x y (player_id, first_pos, second_pos, first_chosen)
@@ -173,7 +175,7 @@ checker_x_offset = 0
 checker_y_offset :: Screen_y_pos
 checker_y_offset = 0
 
--- steps_left -> raw_number -> x -> y
+-- Drawing checkers recursively: steps_left -> raw_number -> x -> y
 add_checkers :: Int -> Int -> Screen_x_pos -> Screen_y_pos -> Checkers -> [Picture]
 add_checkers 0 _ _ _ _ = []
 add_checkers steps_left raw_number x y checkers
