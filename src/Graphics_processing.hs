@@ -82,11 +82,11 @@ event_handler (EventKey (SpecialKey KeyEnter) Down _ _) (checkers, (player_id, c
 
 -- mouse
 -- "1" should be changed to the position according to the (x, y) coordinate
-event_handler (EventKey (MouseButton LeftButton) _ _ (x,y)) (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message) =
-  (checkers, (player_id, (calculate_coord x y), pos_to_move_chosen, False), alert_message)
+event_handler (EventKey (MouseButton LeftButton) Down _ (x,y)) (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message) =
+  (checkers, (player_id, (calculate_coord x y), pos_to_move_chosen, True), alert_message)
 
 -- "1" should be changed to the position according to the (x, y) coordinate
-event_handler (EventKey (MouseButton LeftButton) _ _ (x,y)) (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), alert_message) =
+event_handler (EventKey (MouseButton LeftButton) Down _ (x,y)) (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), alert_message) =
   game_move (checkers, (player_id, checker_chosen, (calculate_coord x y), False), alert_message)
 
 -- other keys pressed
