@@ -129,8 +129,8 @@ king_maybe_can_go f x | (pos == 0) = []
                       | otherwise = pos : (king_maybe_can_go f pos)
                       where pos = (f x)
 
-king_make_list_of_moves :: Checkerboard_pos -> [Checkerboard_pos]
-king_make_list_of_moves x = (king_maybe_can_go left_down x) ++ (king_maybe_can_go left_up x) ++ (king_maybe_can_go right_down x) ++ (king_maybe_can_go right_up x)
+king_make_list_of_moves :: Checkerboard_pos -> [Checker] -> [Checker] -> Way2
+king_make_list_of_moves x l_player l_unplayer= (king_can_go (king_maybe_can_go left_down x) l_player l_unplayer) ++ (king_can_go (king_maybe_can_go left_up x) l_player l_unplayer)++ (king_can_go (king_maybe_can_go right_up x) l_player l_unplayer) ++ (king_can_go (king_maybe_can_go right_down x) l_player l_unplayer)--
 
 king_can_go :: [Checkerboard_pos] -> [Checker] -> [Checker] -> Way2
 king_can_go [] _ _ = []
@@ -141,7 +141,7 @@ king_can_go (x:(y:ys)) list_play list_unplay | (check_pos x list_play) = []
                                              | otherwise = (x, 0) : (king_can_go (y:ys) list_play list_unplay)
 
 possible_moves_king :: Checkerboard_pos ->  Checkers -> State -> [Way]
-possible_moves_king x ch_cortege (stateId, _, _, _) = (king_make_poslist (king_can_go (king_make_list_of_moves x) (playable_checker ch_cortege stateId) (unplayable_checker ch_cortege stateId)))
+possible_moves_king x ch_cortege (stateId, _, _, _) = (king_make_poslist (king_make_list_of_moves x (playable_checker ch_cortege stateId) (unplayable_checker ch_cortege stateId)))
 
 possible_moves :: Checkerboard_pos ->  Checkers -> State -> [Way]
 possible_moves x ch_cortege  stateId | (if_king  x ch_cortege  stateId) = possible_moves_king   x ch_cortege  stateId
