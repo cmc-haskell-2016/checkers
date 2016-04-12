@@ -94,7 +94,7 @@ make_poslist (x:xs) = ([x],[]) : (make_poslist xs)
 
 make_poslist_eat :: Way2 -> [Way]
 make_poslist_eat [] = []
-make_poslist_eat ((x,y):xs) = ([y],[x]):(make_poslist_eat xs)
+make_poslist_eat ((x,y):xs) = ([x],[y]):(make_poslist_eat xs)
 
 king_make_poslist :: Way2 -> [Way]
 king_make_poslist [] = []
