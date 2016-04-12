@@ -37,6 +37,12 @@ initial_world = (create_checkers_object, (1, 1, 1, False), "Choose checker to mo
 world_to_picture :: World_object -> Picture
 world_to_picture world = Pictures (world_elements world)
 
+-- calculate coordinate
+calculate_coord :: Float -> Float -> Int
+calculate_coord x y = (k*4) + (div ((floor x)+205) 100)+1
+                      where k = div (150 - (floor y)) 50
+--calculate_coord x y | x < -180 && x >= -130 = 10
+  --                  | otherwise = 1
 -- key pressing handling
 event_handler :: Event -> World_object -> World_object
 event_handler (EventKey (SpecialKey KeyUp) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message) =
@@ -75,14 +81,13 @@ event_handler (EventKey (SpecialKey KeyEnter) Down _ _) (checkers, (player_id, c
   game_move (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message)
 
 -- mouse
-
 -- "1" should be changed to the position according to the (x, y) coordinate
 event_handler (EventKey (MouseButton LeftButton) _ _ (x,y)) (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message) =
-  (checkers, (player_id, 1, pos_to_move_chosen, False), alert_message)
+  (checkers, (player_id, (calculate_coord x y), pos_to_move_chosen, False), alert_message)
 
 -- "1" should be changed to the position according to the (x, y) coordinate
 event_handler (EventKey (MouseButton LeftButton) _ _ (x,y)) (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), alert_message) =
-  game_move (checkers, (player_id, checker_chosen, 1, False), alert_message)
+  game_move (checkers, (player_id, checker_chosen, (calculate_coord x y), False), alert_message)
 
 -- other keys pressed
 event_handler _ w = w
