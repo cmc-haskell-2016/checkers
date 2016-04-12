@@ -231,8 +231,8 @@ if_game_over (checker_set, (playerId, _, _, _), _)
         | otherwise = True
            -- where id_func = if playerId == 1 then fst else snd
            
-game_cycle :: World_object -> World_object
-game_cycle (checker_set (playerId, checkerChosen, posToMove, ifChosen) _) =
+game_move :: World_object -> World_object
+game_move (checker_set (playerId, checkerChosen, posToMove, ifChosen) _) =
             if if_game_over checker_set (playerId, checkerChosen, posToMove, ifChosen) _ 
                     then (checker_set, (playerId, checkerChosen, posToMove, ifChosen), "Player " ++ show playerId ++ "lost")
-                    else game_cycle (make_move checkerChosen posToMove checker_set (playerId, checkerChosen, posToMove, ifChosen))
+                    else make_move checkerChosen posToMove checker_set (playerId, checkerChosen, posToMove, ifChosen)
