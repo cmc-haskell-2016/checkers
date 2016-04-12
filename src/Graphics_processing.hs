@@ -65,9 +65,10 @@ event_handler (EventKey (SpecialKey KeyRight) Down _ _) (checkers, (player_id, c
 
 -- Testing the position if there is a checker of the player to move. Game continues according to the result
 event_handler (EventKey (SpecialKey KeyEnter) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message) =
-  if (is_there_checker checker_chosen checkers (player_id, checker_chosen, pos_to_move_chosen, False))
-    then (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), "Choose position to move checker to")
-    else (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), "Incorrect. Choose checker to move")
+  (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), "Choose position to move checker to")
+  -- if (is_there_checker checker_chosen checkers (player_id, checker_chosen, pos_to_move_chosen, False))
+  --   then (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), "Choose position to move checker to")
+  --   else (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), "Incorrect. Choose checker to move")
 
 -- positions are chosen. The turn starts
 event_handler (EventKey (SpecialKey KeyEnter) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), alert_message) =
