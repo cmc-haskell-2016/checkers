@@ -96,6 +96,11 @@ make_poslist_eat :: Way2 -> [Way]
 make_poslist_eat [] = []
 make_poslist_eat ((x,y):xs) = ([y],[x]):(make_poslist_eat xs)
 
+king_make_poslist :: Way2 -> [Way]
+king_make_poslist [] = []
+king_make_poslist ((x,y):xs) | y == 0 = ([x], []):(king_make_poslist xs)
+                             | otherwise = ([x], [y]):(king_make_poslist xs)
+                             
 playable_checker :: Checkers -> Int -> [Checker]
 playable_checker (first, second) stateId = if stateId == 1 then first else second
 
@@ -105,15 +110,43 @@ unplayable_checker (first, second) stateId = if stateId == 1 then second else fi
 if_zero :: Way2 -> Bool
 if_zero list = (foldr (||) False (map (\(x, _) -> (x /= 0)) list))
 
+if_king2 :: Checkerboard_pos-> [Checker]->Bool
+if_king2 x ch = (foldr (||) False (map (\(pos, _, king) -> ((x == pos) && king)) ch))
+
+if_king :: Checkerboard_pos ->  Checkers -> State -> Bool
+if_king x ch_cortege (stateId, _, _, _) = if_king2 x (playable_checker ch_cortege stateId)
+
 -- List of possible moves from the position given as the first argument
-possible_moves :: Checkerboard_pos -> Checkers -> State -> [Way]
-possible_moves x ch_cortege (stateId, _, _, _) | not (if_zero unplayable) = make_poslist playable
+checker_possible_moves :: Checkerboard_pos -> Checkers -> State -> [Way]
+checker_possible_moves x ch_cortege (stateId, _, _, _) | not (if_zero unplayable) = make_poslist playable
                                                | otherwise = make_poslist_eat unplayable
                                                where playable = (nearest_reachable_pos (position_to_go stateId x) (playable_checker ch_cortege stateId) (unplayable_checker ch_cortege stateId)) -- !!!!the list of all positions around except those where stayed another playable checkers
                                                      unplayable = (list_of_eaten x  (playable_checker ch_cortege stateId) (unplayable_checker ch_cortege stateId)) -- !!!!the list of all the unplayable checkers that can be eaten
                                                      --unplayable = (list_of_eaten x  (playable_checker ch_cortege stateId) (unplayable_checker ch_cortege stateId))
 
+king_maybe_can_go ::(Checkerboard_pos -> Checkerboard_pos) -> Checkerboard_pos -> [Checkerboard_pos]
+king_maybe_can_go f x | (pos == 0) = []
+                      | otherwise = pos : (king_maybe_can_go f pos)
+                      where pos = (f x)
 
+king_make_list_of_moves :: Checkerboard_pos -> [Checkerboard_pos]
+king_make_list_of_moves x = (king_maybe_can_go left_down x) ++ (king_maybe_can_go left_up x) ++ (king_maybe_can_go right_down x) ++ (king_maybe_can_go right_up x)  
+
+king_can_go :: [Checkerboard_pos] -> [Checker] -> [Checker] -> Way2
+king_can_go [] _ _ = []
+king_can_go [x] list_play list_unplay = if ((check_pos x list_play) || (check_pos x list_unplay)) then [] else [(x,0)]                                           
+king_can_go (x:(y:ys)) list_play list_unplay | (check_pos x list_play) = []
+                                             | (check_pos x list_unplay) && not (check_pos y list_unplay) && not (check_pos y list_play) = [(x,y)]
+                                             | (check_pos x list_unplay) = []
+                                             | otherwise = (x, 0) : (king_can_go (y:ys) list_play list_unplay)
+                                                     
+possible_moves_king :: Checkerboard_pos ->  Checkers -> State -> [Way]
+possible_moves_king x ch_cortege (stateId, _, _, _) = (king_make_poslist (king_can_go (king_make_list_of_moves x) (playable_checker ch_cortege stateId) (unplayable_checker ch_cortege stateId)))
+
+possible_moves :: Checkerboard_pos ->  Checkers -> State -> [Way]
+possible_moves x ch_cortege  stateId | (if_king  x ch_cortege  stateId) = possible_moves_king   x ch_cortege  stateId
+                                         | otherwise =  checker_possible_moves x ch_cortege  stateId   
+                                         
 --actually shiftes a checker according to the player's move
 change_pos :: Checkerboard_pos -> Checkerboard_pos -> Int -> Checkers -> Checkers
 change_pos start_pos dist_pos playerId checker_set
