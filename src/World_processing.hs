@@ -199,9 +199,9 @@ move_from_to :: Checkerboard_pos -> Checkerboard_pos -> Checkers -> [Way] -> Sta
 move_from_to start_pos dest_pos checker_set ways (playerId, checkerChosen, posToMove, ifChosen)
         | list == [] = (checker_set, (playerId, checkerChosen, 0, False), "Can not move checker to this position")
         | otherwise = if (snd (head list) == [])
-                            then (moved_board, ((playerId + 1) `mod` 2, 0, 0, False), "")
+                            then (moved_board, ((playerId + 1) `mod` 2, 1, 1, False), "")
                             else (kill_eaten (head (snd (head list))) playerId moved_board,
-                                  ((playerId + 1) `mod` 2, 0, 0, False),
+                                  ((playerId + 1) `mod` 2, 1, 1, False),
                                   ""
                                  )
             where list = filter (\(xs, _) -> (head xs) == dest_pos) ways
@@ -219,7 +219,7 @@ make_move start_pos dest_pos checker_set (playerId, checkerChosen, posToMove, if
                         checker_set
                         (possible_moves start_pos checker_set (playerId, checkerChosen, posToMove, ifChosen))
                         (playerId, checkerChosen, posToMove, ifChosen)
-        | otherwise = (checker_set, (playerId, 0, 0, False), "Can not take checker from this position")
+        | otherwise = (checker_set, (playerId, 1, 1, False), "Can not take checker from this position")
 
 if_player_has_moves :: Int -> Checkers -> Bool
 if_player_has_moves playerId checker_set
