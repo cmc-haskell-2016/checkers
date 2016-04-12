@@ -65,9 +65,10 @@ event_handler (EventKey (SpecialKey KeyRight) Down _ _) (checkers, (player_id, c
 
 -- Testing the position if there is a checker of the player to move. Game continues according to the result
 event_handler (EventKey (SpecialKey KeyEnter) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message) =
-  if (is_there_checker checker_chosen checkers (player_id, checker_chosen, pos_to_move_chosen, False))
-    then (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), "Choose position to move checker to")
-    else (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), "Incorrect. Choose checker to move")
+  (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), "Choose position to move checker to")
+  -- if (is_there_checker checker_chosen checkers (player_id, checker_chosen, pos_to_move_chosen, False))
+  --   then (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), "Choose position to move checker to")
+  --   else (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), "Incorrect. Choose checker to move")
 
 -- positions are chosen. The turn starts
 event_handler (EventKey (SpecialKey KeyEnter) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), alert_message) =
@@ -208,7 +209,7 @@ add_checkers steps_left raw_number x y checkers
    = (Translate (x + checker_x_offset + if (mod raw_number 2) == 0 then  cell_offset else 0) (y + checker_y_offset)
    $ Scale 1 1
    $ Color (checker_color checkers number)
-   $ ThickCircle 12 12)
+   $ ThickCircle 12 (if (if_king number checkers (0, 0, 0, False)) then 5 else 12))
       : add_checkers (steps_left - 1) raw_number (x + (2 * cell_offset)) y checkers
       where number = (4 * (8 - raw_number) + (4 - steps_left) + 1)
 
