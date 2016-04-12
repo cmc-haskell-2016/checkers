@@ -1,4 +1,4 @@
-module World_processing (create_checkers_object, is_there_checker, game_move, if_king) where
+module World_processing (create_checkers_object, is_there_checker, game_move, if_king, ifLightened) where
 
 import Types
 
@@ -146,7 +146,7 @@ possible_moves_king x ch_cortege (stateId, _, _, _) = (king_make_poslist (king_m
 possible_moves :: Checkerboard_pos ->  Checkers -> State -> [Way]
 possible_moves x ch_cortege  stateId | (if_king  x ch_cortege  stateId) = possible_moves_king   x ch_cortege  stateId
                                          | otherwise =  checker_possible_moves x ch_cortege  stateId
-                                         
+
 isOnIdEdge :: Checkerboard_pos -> Int -> Bool
 isOnIdEdge pos playerId
         | playerId == 1 && pos >= 29 = True
@@ -244,8 +244,8 @@ game_move (checker_set, (playerId, checkerChosen, posToMove, ifChosen), _) =
             if if_game_over (checker_set, (playerId, checkerChosen, posToMove, ifChosen), "")
                     then (checker_set, (playerId, checkerChosen, posToMove, ifChosen), "Player " ++ show playerId ++ " lost")
                     else make_move checkerChosen posToMove checker_set (playerId, checkerChosen, posToMove, ifChosen)
-                    
---takes current position, position to check, board and state                    
+
+--takes current position, position to check, board and state
 ifLightened :: Checkerboard_pos -> Checkerboard_pos -> Checkers -> State -> Bool
 ifLightened start_pos dist_pos checker_set state = any (\(xs, _) -> (head xs) == dist_pos) ways
             where ways = possible_moves start_pos checker_set state

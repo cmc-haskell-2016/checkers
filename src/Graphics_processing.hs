@@ -81,11 +81,9 @@ event_handler (EventKey (SpecialKey KeyEnter) Down _ _) (checkers, (player_id, c
   game_move (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message)
 
 -- mouse
--- "1" should be changed to the position according to the (x, y) coordinate
 event_handler (EventKey (MouseButton LeftButton) Down _ (x,y)) (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message) =
   (checkers, (player_id, (calculate_coord x y), pos_to_move_chosen, True), alert_message)
 
--- "1" should be changed to the position according to the (x, y) coordinate
 event_handler (EventKey (MouseButton LeftButton) Down _ (x,y)) (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), alert_message) =
   game_move (checkers, (player_id, checker_chosen, (calculate_coord x y), False), alert_message)
 
@@ -233,13 +231,13 @@ colouring_offset = -10
 
 add_coloring :: Int -> Int -> Screen_x_pos -> Screen_y_pos -> Checkers -> State -> [Picture]
 add_coloring 0 _ _ _ _ _ = []
-add_coloring steps_left raw_number x y checkers state
+add_coloring steps_left raw_number x y checkers (player_id, pos_chosen, pos2_chosen, is_pos1_chosen)
    = (Translate (x + if (mod raw_number 2) == 0 then  cell_offset else 0) y
    $ Scale 1 1
 -- red or black. Red for enlightened position
-   $ Color red
+   $ Color (if is_pos1_chosen && (ifLightened pos_chosen number checkers (player_id, pos_chosen, pos2_chosen, is_pos1_chosen)) then red else black)
    $ Circle 20)
-      : add_coloring (steps_left - 1) raw_number (x + (2 * cell_offset)) y checkers state
+      : add_coloring (steps_left - 1) raw_number (x + (2 * cell_offset)) y checkers (player_id, pos_chosen, pos2_chosen, is_pos1_chosen)
       where number = (4 * (8 - raw_number) + (4 - steps_left) + 1)
 
 
