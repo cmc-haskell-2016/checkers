@@ -244,3 +244,8 @@ game_move (checker_set, (playerId, checkerChosen, posToMove, ifChosen), _) =
             if if_game_over (checker_set, (playerId, checkerChosen, posToMove, ifChosen), "")
                     then (checker_set, (playerId, checkerChosen, posToMove, ifChosen), "Player " ++ show playerId ++ " lost")
                     else make_move checkerChosen posToMove checker_set (playerId, checkerChosen, posToMove, ifChosen)
+                    
+--takes current position, position to check, board and state                    
+ifLightened :: Checkerboard_pos -> Checkerboard_pos -> Checkers -> State -> Bool
+ifLightened start_pos dist_pos checker_set state = any (\(xs, _) -> (head xs) == dist_pos) ways
+            where ways = possible_moves start_pos checker_set state
