@@ -67,7 +67,7 @@ event_handler (EventKey (SpecialKey KeyEnter) Down _ _) (checkers, (player_id, c
 
 -- positions are chosen. The turn starts
 event_handler (EventKey (SpecialKey KeyEnter) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), alert_message) =
-  (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message)
+  game_move (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message)
 
 event_handler _ w = w
 
