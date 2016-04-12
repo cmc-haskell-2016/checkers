@@ -40,28 +40,28 @@ world_to_picture world = Pictures (world_elements world)
 -- key pressing handling
 event_handler :: Event -> World_object -> World_object
 event_handler (EventKey (SpecialKey KeyUp) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message) =
-  (checkers, (player_id, (mod (checker_chosen + 32 - 4) 32), pos_to_move_chosen, False), alert_message)
+  (checkers, (player_id, (mod (checker_chosen + 31 - 4) 32) + 1, pos_to_move_chosen, False), alert_message)
 
 event_handler (EventKey (SpecialKey KeyDown) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message) =
-  (checkers, (player_id, (mod (checker_chosen + 32 + 4) 32), pos_to_move_chosen, False), alert_message)
+  (checkers, (player_id, (mod (checker_chosen + 31 + 4) 32) + 1, pos_to_move_chosen, False), alert_message)
 
 event_handler (EventKey (SpecialKey KeyLeft) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message) =
-  (checkers, (player_id, (mod (checker_chosen + 32 - 1) 32), pos_to_move_chosen, False), alert_message)
+  (checkers, (player_id, (mod (checker_chosen + 31 - 1) 32) + 1, pos_to_move_chosen, False), alert_message)
 
 event_handler (EventKey (SpecialKey KeyRight) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message) =
-  (checkers, (player_id, (mod (checker_chosen + 32 + 1) 32), pos_to_move_chosen, False), alert_message)
+  (checkers, (player_id, (mod (checker_chosen + 31 + 1) 32) + 1, pos_to_move_chosen, False), alert_message)
 
 event_handler (EventKey (SpecialKey KeyUp) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), alert_message) =
-  (checkers, (player_id, checker_chosen, (mod (pos_to_move_chosen + 32 - 4) 32), True), alert_message)
+  (checkers, (player_id, checker_chosen, (mod (pos_to_move_chosen + 31 - 4) 32) + 1, True), alert_message)
 
 event_handler (EventKey (SpecialKey KeyDown) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), alert_message) =
-  (checkers, (player_id, checker_chosen, (mod (pos_to_move_chosen + 32 + 4) 32), True), alert_message)
+  (checkers, (player_id, checker_chosen, (mod (pos_to_move_chosen + 31 + 4) 32) + 1, True), alert_message)
 
 event_handler (EventKey (SpecialKey KeyLeft) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), alert_message) =
-  (checkers, (player_id, checker_chosen, (mod (pos_to_move_chosen + 32 - 1) 32), True), alert_message)
+  (checkers, (player_id, checker_chosen, (mod (pos_to_move_chosen + 31 - 1) 32) + 1, True), alert_message)
 
 event_handler (EventKey (SpecialKey KeyRight) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), alert_message) =
-  (checkers, (player_id, checker_chosen, (mod (pos_to_move_chosen + 32 + 1) 32), True), alert_message)
+  (checkers, (player_id, checker_chosen, (mod (pos_to_move_chosen + 31 + 1) 32) + 1, True), alert_message)
 
 -- Testing the position if there is a checker of the player to move. Game continues according to the result
 event_handler (EventKey (SpecialKey KeyEnter) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message) =
@@ -182,13 +182,32 @@ checker_x_offset = 0
 checker_y_offset :: Screen_y_pos
 checker_y_offset = 0
 
+-- Color of the checker construct
+
+white_checker_color :: Bool -> Color
+white_checker_color True = makeColor 0.8 0.8 1.0 1
+white_checker_color False = white
+
+black_checker_color :: Bool -> Color
+black_checker_color True = makeColor 1.0 0.5 0.5 1
+black_checker_color False = bg_color
+
+checker_color :: Checkers -> Checkerboard_pos -> Color
+checker_color checkers position =
+  if (is_there_checker position checkers (1, 0, 0, False))
+    then white_checker_color (if_king position checkers (1, 0, 0, False))
+    else
+      (if (is_there_checker position checkers (0, 0, 0, False))
+        then black_checker_color (if_king position checkers (0, 0, 0, False))
+        else black)
+
 -- Drawing checkers recursively: steps_left -> raw_number -> x -> y
 add_checkers :: Int -> Int -> Screen_x_pos -> Screen_y_pos -> Checkers -> [Picture]
 add_checkers 0 _ _ _ _ = []
 add_checkers steps_left raw_number x y checkers
    = (Translate (x + checker_x_offset + if (mod raw_number 2) == 0 then  cell_offset else 0) (y + checker_y_offset)
    $ Scale 1 1
-   $ Color (if (is_there_checker number checkers (1, 0, 0, False)) then white else (if (is_there_checker number checkers (2, 0, 0, False)) then bg_color else black))
+   $ Color (checker_color checkers number)
    $ ThickCircle 12 12)
       : add_checkers (steps_left - 1) raw_number (x + (2 * cell_offset)) y checkers
       where number = (4 * (8 - raw_number) + (4 - steps_left) + 1)
