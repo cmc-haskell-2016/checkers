@@ -10,3 +10,4 @@ type Is_alive = Bool
 type Is_king = Bool
 
 type Way = ([Checkerboard_pos], [Checkerboard_pos]) --first is for all the positions, that checker go, second is for all eaten checkers positions
+type Way2 = [(Checkerboard_pos, Checkerboard_pos)]
