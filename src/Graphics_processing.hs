@@ -74,6 +74,16 @@ event_handler (EventKey (SpecialKey KeyEnter) Down _ _) (checkers, (player_id, c
 event_handler (EventKey (SpecialKey KeyEnter) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), alert_message) =
   game_move (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message)
 
+-- mouse
+
+-- "1" should be changed to the position according to the (x, y) coordinate
+event_handler (EventKey (MouseButton LeftButton) _ _ (x,y)) (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message) =
+  (checkers, (player_id, 1, pos_to_move_chosen, False), alert_message)
+
+-- "1" should be changed to the position according to the (x, y) coordinate
+event_handler (EventKey (MouseButton LeftButton) _ _ (x,y)) (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), alert_message) =
+  game_move (checkers, (player_id, checker_chosen, 1, False), alert_message)
+
 -- other keys pressed
 event_handler _ w = w
 
@@ -137,7 +147,7 @@ add_board x y checkers state
 -- Adding raws recursively. Raw contains cells, checkers, numbers on cell: raws left -> black_color -> x -> y -> result_picture_list
 add_row :: Int -> Bool -> Screen_x_pos -> Screen_y_pos -> Checkers -> State -> [Picture]
 add_row 0 _ _ _ _ _ = []
-add_row n black_needed x y checkers state = (add_cell 8 black_needed x y) ++ (add_row (n - 1) (not black_needed) x (y - cell_offset) checkers state) ++ (add_checkers 4 n x y checkers) ++ (add_numbers 4 n x y state)
+add_row n black_needed x y checkers state = (add_cell 8 black_needed x y) ++ (add_row (n - 1) (not black_needed) x (y - cell_offset) checkers state) ++ (add_checkers 4 n x y checkers) ++ (add_coloring 4 n x y checkers state) ++ (add_numbers 4 n x y state)
 
 -- just a constant cell_offset is equal to cell size (because one cell goes just after another in the row)
 cell_offset :: Float
@@ -212,6 +222,21 @@ add_checkers steps_left raw_number x y checkers
    $ ThickCircle 12 12)
       : add_checkers (steps_left - 1) raw_number (x + (2 * cell_offset)) y checkers
       where number = (4 * (8 - raw_number) + (4 - steps_left) + 1)
+
+colouring_offset :: Float
+colouring_offset = -10
+
+add_coloring :: Int -> Int -> Screen_x_pos -> Screen_y_pos -> Checkers -> State -> [Picture]
+add_coloring 0 _ _ _ _ _ = []
+add_coloring steps_left raw_number x y checkers state
+   = (Translate (x + if (mod raw_number 2) == 0 then  cell_offset else 0) y
+   $ Scale 1 1
+-- red or black. Red for enlightened position
+   $ Color red
+   $ Circle 20)
+      : add_coloring (steps_left - 1) raw_number (x + (2 * cell_offset)) y checkers state
+      where number = (4 * (8 - raw_number) + (4 - steps_left) + 1)
+
 
 ------- end of board drawing functions
 
