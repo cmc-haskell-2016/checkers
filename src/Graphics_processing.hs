@@ -22,18 +22,22 @@ display_mode = InWindow
   (800, 600)   -- window size
   (0, 0) -- window offset
 
+-- just a constant
 bg_color :: Color
 bg_color = makeColor 0.7 0.7 0.8 1
 
+-- just a constant
 steps_per_second :: Int
 steps_per_second = 5
 
 initial_world :: World_object
 initial_world = (create_checkers_object, (1, 1, 1, False), "Choose checker to move")
 
+-- drawing world function
 world_to_picture :: World_object -> Picture
 world_to_picture world = Pictures (world_elements world)
 
+-- key pressing handling
 event_handler :: Event -> World_object -> World_object
 event_handler (EventKey (SpecialKey KeyUp) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message) =
   (checkers, (player_id, (mod (checker_chosen + 32 - 4) 32), pos_to_move_chosen, False), alert_message)
@@ -69,6 +73,7 @@ event_handler (EventKey (SpecialKey KeyEnter) Down _ _) (checkers, (player_id, c
 event_handler (EventKey (SpecialKey KeyEnter) Down _ _) (checkers, (player_id, checker_chosen, pos_to_move_chosen, True), alert_message) =
   game_move (checkers, (player_id, checker_chosen, pos_to_move_chosen, False), alert_message)
 
+-- other keys pressed
 event_handler _ w = w
 
 -- the world is static. No need to change it according to the playing time
@@ -77,6 +82,7 @@ sim_step _ w = w
 
 -- end of display configuration
 
+-- just constants
 board_x_offset :: Screen_x_pos
 board_x_offset = -180
 
@@ -94,6 +100,7 @@ world_elements :: World_object -> [Picture]
 world_elements (checkers, state, alert_message)
   = (add_board board_x_offset board_y_offset checkers state) ++ (add_infobar state alert_message infobar_x_offset infobar_y_offset)
 
+-- collecting infobar elements
 add_infobar :: State -> Alert_message -> Screen_x_pos -> Screen_y_pos -> [Picture]
 add_infobar state message x y
   = (infobar_bg x y) : (infobar_title (x - 50) (y + 20) "Checkers") : (infobar_text (x - 220) (y - 10) ("move of the player "  ++ (show state))) : (infobar_text (x - 220) (y - 50) message) : []
@@ -121,17 +128,17 @@ infobar_bg x y
 
 ------- board drawing functions
 
--- x_start -> y_start -> result_picture_list
+-- Board raws: x_start -> y_start -> result_picture_list
 add_board :: Screen_x_pos -> Screen_y_pos -> Checkers -> State -> [Picture]
 add_board x y checkers state
   = add_row 8 False x y checkers state
 
--- Adding raws recursively: raws left -> black_color -> x -> y -> result_picture_list
+-- Adding raws recursively. Raw contains cells, checkers, numbers on cell: raws left -> black_color -> x -> y -> result_picture_list
 add_row :: Int -> Bool -> Screen_x_pos -> Screen_y_pos -> Checkers -> State -> [Picture]
 add_row 0 _ _ _ _ _ = []
 add_row n black_needed x y checkers state = (add_cell 8 black_needed x y) ++ (add_row (n - 1) (not black_needed) x (y - cell_offset) checkers state) ++ (add_checkers 4 n x y checkers) ++ (add_numbers 4 n x y state)
 
--- cell_offset is equal to cell size (because one cell goes just after another in the row)
+-- just a constant cell_offset is equal to cell size (because one cell goes just after another in the row)
 cell_offset :: Float
 cell_offset = 50
 
@@ -140,7 +147,7 @@ add_cell :: Int -> Bool -> Screen_x_pos -> Screen_y_pos -> [Picture]
 add_cell 0 _ _ _ = []
 add_cell n black_needed x y = (cell black_needed x y):(add_cell (n - 1) (not black_needed) (x + cell_offset) y)
 
--- Adding one cell: cell_is_black -> x -> y -> result picture
+-- Adding one cell: if_cell_is_black -> x -> y -> result picture
 cell :: Bool -> Screen_x_pos -> Screen_y_pos -> Picture
 cell True x y = Translate (x) (y)
   $ Scale 0.5 0.5
@@ -149,7 +156,7 @@ cell False x y = Translate (x) (y)
   $ Scale 0.5 0.5
   $ unsafePerformIO (loadBMP "data/white.bmp")
 
--- offset from top left corner of the cell. Needed for drawing numbers on the cells
+-- just constants: offset from top left corner of the cell. Needed for drawing numbers on the cells
 number_x_offset :: Screen_x_pos
 number_x_offset = -20
 
@@ -168,7 +175,7 @@ add_numbers steps_left raw_number x y (player_id, first_pos, second_pos, first_c
       : (add_numbers (steps_left - 1) raw_number (x + (2 * cell_offset)) y (player_id, first_pos, second_pos, first_chosen))
       where number = (4 * (8 - raw_number) + (4 - steps_left) + 1)
 
--- offset from top left corner of the cell. Needed for drawing checkers on the cells
+-- just constants: offset from top left corner of the cell. Needed for drawing checkers on the cells
 checker_x_offset :: Screen_x_pos
 checker_x_offset = 0
 
