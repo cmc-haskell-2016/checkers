@@ -186,7 +186,7 @@ checker_y_offset = 0
 -- Color of the checker construct
 
 white_checker_color :: Bool -> Color
-white_checker_color True = makeColor 0.8 1.0 0.8 1
+white_checker_color True = makeColor 0.8 0.8 1.0 1
 white_checker_color False = white
 
 black_checker_color :: Bool -> Color
@@ -209,7 +209,7 @@ add_checkers steps_left raw_number x y checkers
    = (Translate (x + checker_x_offset + if (mod raw_number 2) == 0 then  cell_offset else 0) (y + checker_y_offset)
    $ Scale 1 1
    $ Color (checker_color checkers number)
-   $ ThickCircle 12 (if (if_king number checkers (0, 0, 0, False)) then 5 else 12))
+   $ ThickCircle 12 12)
       : add_checkers (steps_left - 1) raw_number (x + (2 * cell_offset)) y checkers
       where number = (4 * (8 - raw_number) + (4 - steps_left) + 1)
 
