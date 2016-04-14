@@ -2,8 +2,8 @@ module Main where
 
 -- import Lib
 import Types
-import World_processing
-import Graphics_processing
+import WorldProcessing
+import GraphicsProcessing
 
 main :: IO ()
-main = game_start
+main = gameStart
