@@ -199,7 +199,7 @@ checker_y_offset = 0
 -- Color of the checker construct
 
 white_checker_color :: Bool -> Color
-white_checker_color True = makeColor 0.8 0.8 1.0 1
+white_checker_color True = makeColor 0.8 1.0 0.8 1
 white_checker_color False = white
 
 black_checker_color :: Bool -> Color
@@ -226,8 +226,6 @@ add_checkers steps_left raw_number x y checkers
       : add_checkers (steps_left - 1) raw_number (x + (2 * cell_offset)) y checkers
       where number = (4 * (8 - raw_number) + (4 - steps_left) + 1)
 
-colouring_offset :: Float
-colouring_offset = -10
 
 add_coloring :: Int -> Int -> Screen_x_pos -> Screen_y_pos -> Checkers -> State -> [Picture]
 add_coloring 0 _ _ _ _ _ = []
@@ -235,7 +233,7 @@ add_coloring steps_left raw_number x y checkers (player_id, pos_chosen, pos2_cho
    = (Translate (x + if (mod raw_number 2) == 0 then  cell_offset else 0) y
    $ Scale 1 1
 -- red or black. Red for enlightened position
-   $ Color (if is_pos1_chosen && (ifLightened pos_chosen number checkers (player_id, pos_chosen, pos2_chosen, is_pos1_chosen)) then red else black)
+   $ Color (if is_pos1_chosen && (is_there_checker pos_chosen checkers (player_id, pos_chosen, pos2_chosen, is_pos1_chosen)) && (ifLightened pos_chosen number checkers (player_id, pos_chosen, pos2_chosen, is_pos1_chosen)) then red else black)
    $ Circle 20)
       : add_coloring (steps_left - 1) raw_number (x + (2 * cell_offset)) y checkers (player_id, pos_chosen, pos2_chosen, is_pos1_chosen)
       where number = (4 * (8 - raw_number) + (4 - steps_left) + 1)
