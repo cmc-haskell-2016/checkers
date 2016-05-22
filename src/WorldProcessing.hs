@@ -6,18 +6,18 @@ import Types
 -- this function creates a list of Checker (for example f 1 3 ==> [(1,True,False),(2,True,False),(3,True,False)]
 createConsistentList :: CheckerboardPos->CheckerboardPos->[Checker]
 createConsistentList first last | first > last = []
-                                  | otherwise = (first,True, False):createConsistentList (first + 1) last
+                                  | otherwise = (Checker first True False):createConsistentList (first + 1) last
 
 -- creating the Checkers - fst Checkers ==> white, snd Checkers ==> black
 createCheckersObject :: Checkers
-createCheckersObject =((createConsistentList 1 12), (createConsistentList 21 32))
+createCheckersObject =(Checkers (createConsistentList 1 12) (createConsistentList 21 32))
 
 -- Testing if there is a checker of the player in the board position
 isThereChecker :: CheckerboardPos -> Checkers -> State -> Bool
-isThereChecker pos checkerSet (stateId, _, _, _) =
-                                 (any (\(checkerPos, isAlive, _) -> pos == checkerPos && isAlive) (idFunc checkerSet))
+isThereChecker pos checkerSet (State stateId _ _ _) =
+                                 (any (\(Checker checkerPos isAlive _) -> pos == checkerPos && isAlive) (idFunc checkerSet))
                                  --states whether there is a living checker with a given position of an appropriate colour
-                                           where idFunc = if stateId == 1 then fst else snd
+                                           where idFunc = if stateId == 1 then fstPlayer else sndPlayer
                                            --makes tuple extraction function depending on stateId
 --   /
 --  <
@@ -64,7 +64,7 @@ positionToGo id pos | id == 1 = (filter (> 0) [(leftDown pos), (rightDown pos)])
 
 -- searches for a pos in a list and returns true if finds it
 checkPos :: CheckerboardPos-> [Checker]->Bool
-checkPos x ch = (foldr (||) False (map (\(pos, alive, _) -> ((x == pos) && alive)) ch))
+checkPos x ch = (foldr (||) False (map (\(Checker pos alive _) -> ((x == pos) && alive)) ch))
 
 
 -- finds all the nearest pos except pos, that has a playable checker there
@@ -102,23 +102,23 @@ kingMakePoslist ((x,y):xs) | y == 0 = ([x], []):(kingMakePoslist xs)
                              | otherwise = ([y], [x]):(kingMakePoslist xs)
 
 playableChecker :: Checkers -> Int -> [Checker]
-playableChecker (first, second) stateId = if stateId == 1 then first else second
+playableChecker (Checkers first second) stateId = if stateId == 1 then first else second
 
 unplayableChecker :: Checkers -> Int -> [Checker]
-unplayableChecker (first, second) stateId = if stateId == 1 then second else first
+unplayableChecker (Checkers first second) stateId = if stateId == 1 then second else first
 
 ifZero :: Way2 -> Bool
 ifZero list = (foldr (||) False (map (\(x, _) -> (x /= 0)) list))
 
 ifKing2 :: CheckerboardPos-> [Checker]->Bool
-ifKing2 x ch = (foldr (||) False (map (\(pos, _, king) -> ((x == pos) && king)) ch))
+ifKing2 x ch = (foldr (||) False (map (\(Checker pos _ king) -> ((x == pos) && king)) ch))
 
 ifKing :: CheckerboardPos ->  Checkers -> State -> Bool
-ifKing x chCortege (stateId, _, _, _) = ifKing2 x (playableChecker chCortege stateId)
+ifKing x chCortege (State stateId _ _ _) = ifKing2 x (playableChecker chCortege stateId)
 
 -- List of possible moves from the position given as the first argument
 checkerPossibleMoves :: CheckerboardPos -> Checkers -> State -> [Way]
-checkerPossibleMoves x chCortege (stateId, _, _, _) | not (ifZero unplayable) = makePoslist playable
+checkerPossibleMoves x chCortege (State stateId _ _ _) | not (ifZero unplayable) = makePoslist playable
                                                | otherwise = makePoslistEat unplayable
                                                where playable = (nearestReachablePos (positionToGo stateId x) (playableChecker chCortege stateId) (unplayableChecker chCortege stateId)) -- !!!!the list of all positions around except those where stayed another playable checkers
                                                      unplayable = (listOfEaten x  (playableChecker chCortege stateId) (unplayableChecker chCortege stateId)) -- !!!!the list of all the unplayable checkers that can be eaten
@@ -141,7 +141,7 @@ kingCanGo (x:(y:ys)) listPlay listUnplay | (checkPos x listPlay) = []
                                              | otherwise = (x, 0) : (kingCanGo (y:ys) listPlay listUnplay)
 
 possibleMovesKing :: CheckerboardPos ->  Checkers -> State -> [Way]
-possibleMovesKing x chCortege (stateId, _, _, _) = (kingMakePoslist (kingMakeListOfMoves x (playableChecker chCortege stateId) (unplayableChecker chCortege stateId)))
+possibleMovesKing x chCortege (State stateId _ _ _) = (kingMakePoslist (kingMakeListOfMoves x (playableChecker chCortege stateId) (unplayableChecker chCortege stateId)))
 
 possibleMoves :: CheckerboardPos ->  Checkers -> State -> [Way]
 possibleMoves x chCortege  stateId | (ifKing  x chCortege  stateId) = possibleMovesKing   x chCortege  stateId
@@ -157,52 +157,50 @@ isOnIdEdge pos playerId
 changePos :: CheckerboardPos -> CheckerboardPos -> Int -> Checkers -> Checkers
 changePos startPos distPos playerId checkerSet
                 | playerId == 1 =
-                      (map
-                        (\(pos, isAlive, isKing) -> if pos == startPos
-                                                        then (distPos, True, isKing || isOnIdEdge distPos playerId)
-                                                        else (pos, isAlive, isKing)
+                      (Checkers (map
+                        (\(Checker pos isAlive isKing) -> if pos == startPos
+                                                        then (Checker distPos True (isKing || isOnIdEdge distPos playerId))
+                                                        else (Checker pos isAlive isKing)
                         )
-                        (fst checkerSet),
-                       snd checkerSet)
+                        (fstPlayer checkerSet)) (sndPlayer checkerSet))
                 | otherwise =
-                      (fst checkerSet,
-                        map
-                        (\(pos, isAlive, isKing) -> if pos == startPos
-                                                        then (distPos, True, isKing || isOnIdEdge distPos playerId)
-                                                        else (pos, isAlive, isKing)
+                      (Checkers (fstPlayer checkerSet)
+                        (map
+                        (\(Checker pos isAlive isKing) -> if pos == startPos
+                                                        then (Checker distPos True (isKing || isOnIdEdge distPos playerId))
+                                                        else (Checker pos isAlive isKing)
                         )
-                        (snd checkerSet))
+                        (sndPlayer checkerSet)))
 
 --takes an eaten checker away from the board (changes it's IsAlive attribute)
 killEaten :: CheckerboardPos -> Int -> Checkers -> Checkers
 killEaten posToKill playerId checkerSet
                 | playerId /= 1 =
-                      (map
-                        (\(pos, isAlive, isKing) -> if pos == posToKill
-                                                                        then (pos, False, isKing)
-                                                                        else (pos, isAlive, isKing)
+                      (Checkers (map
+                        (\(Checker pos isAlive isKing) -> if pos == posToKill
+                                                                        then (Checker pos False isKing)
+                                                                        else (Checker pos isAlive isKing)
                         )
-                        (fst checkerSet),
-                       snd checkerSet)
+                        (fstPlayer checkerSet))
+                       (sndPlayer checkerSet))
                 | otherwise =
-                      (fst checkerSet,
-                        map
-                        (\(pos, isAlive, isKing) -> if pos == posToKill
-                                                                        then (pos, False, isKing)
-                                                                        else (pos, isAlive, isKing)
+                      (Checkers (fstPlayer checkerSet)
+                        (map
+                        (\(Checker pos isAlive isKing) -> if pos == posToKill
+                                                                        then (Checker pos False isKing)
+                                                                        else (Checker pos isAlive isKing)
                         )
-                        (snd checkerSet)
+                        (sndPlayer checkerSet))
                        )
 
 --makes a move from a consistent startPos to a yet-to-be-checked destPos
 moveFromTo :: CheckerboardPos -> CheckerboardPos -> Checkers -> [Way] -> State -> WorldObject
-moveFromTo startPos destPos checkerSet ways (playerId, checkerChosen, posToMove, ifChosen)
-        | list == [] = (checkerSet, (playerId, checkerChosen, 0, False), "Can not move checker to this position")
+moveFromTo startPos destPos checkerSet ways (State playerId checkerChosen posToMove ifChosen)
+        | list == [] = (WorldObject checkerSet (State playerId checkerChosen 0 False) "Can not move checker to this position")
         | otherwise = if (snd (head list) == [])
-                            then (movedBoard, ((playerId + 1) `mod` 2, 1, 1, False), "")
-                            else (killEaten (head (snd (head list))) playerId movedBoard,
-                                  ((playerId + 1) `mod` 2, 1, 1, False),
-                                  ""
+                            then (WorldObject movedBoard (State ((playerId + 1) `mod` 2) 1 1 False) "")
+                            else (WorldObject (killEaten (head (snd (head list))) playerId movedBoard)
+                                  (State ((playerId + 1) `mod` 2) 1 1 False) ""
                                  )
             where list = filter (\(xs, _) -> (head xs) == destPos) ways
                  -- idFunc1 = if playerId == 1 then fst else snd
@@ -211,39 +209,39 @@ moveFromTo startPos destPos checkerSet ways (playerId, checkerChosen, posToMove,
 
 -- Makes a move and builds new World object
 makeMove :: CheckerboardPos -> CheckerboardPos -> Checkers -> State -> WorldObject
-makeMove startPos destPos checkerSet (playerId, checkerChosen, posToMove, ifChosen)
-        | (isThereChecker startPos checkerSet (playerId, checkerChosen, posToMove, ifChosen)) =
+makeMove startPos destPos checkerSet (State playerId checkerChosen posToMove ifChosen)
+        | (isThereChecker startPos checkerSet (State playerId checkerChosen posToMove ifChosen)) =
                     moveFromTo
                         startPos
                         destPos
                         checkerSet
-                        (possibleMoves startPos checkerSet (playerId, checkerChosen, posToMove, ifChosen))
-                        (playerId, checkerChosen, posToMove, ifChosen)
-        | otherwise = (checkerSet, (playerId, 1, 1, False), "Can not take checker from this position")
+                        (possibleMoves startPos checkerSet (State playerId checkerChosen posToMove ifChosen))
+                        (State playerId checkerChosen posToMove ifChosen)
+        | otherwise = (WorldObject checkerSet (State playerId 1 1 False) "Can not take checker from this position")
 
 ifPlayerHasMoves :: Int -> Checkers -> Bool
 ifPlayerHasMoves playerId checkerSet
         | any (\x -> x /= []) list = True
         | otherwise = False
         where list = map
-                        (\(pos, isAlive, _) -> if isAlive
-                                                then possibleMoves pos checkerSet (playerId, undefined, undefined, undefined)
+                        (\(Checker pos isAlive _) -> if isAlive
+                                                then possibleMoves pos checkerSet (State playerId undefined undefined undefined)
                                                 else [] )
-                        (if playerId == 1 then fst checkerSet else snd checkerSet)
+                        (if playerId == 1 then (fstPlayer checkerSet) else (sndPlayer checkerSet))
 
 ifGameOver :: WorldObject -> Bool
-ifGameOver (checkerSet, (playerId, _, _, _), _)
+ifGameOver (WorldObject checkerSet (State playerId _ _ _) _)
         | ifPlayerHasMoves playerId checkerSet &&
-            (any (\(_, isAlive, _) -> isAlive) (if playerId == 1 then (snd checkerSet) else (fst checkerSet)) )
+            (any (\(Checker _ isAlive _) -> isAlive) (if playerId == 1 then (sndPlayer checkerSet) else (fstPlayer checkerSet)) )
              = False
         | otherwise = True
            -- where idFunc = if playerId == 1 then fst else snd
 
 gameMove :: WorldObject -> WorldObject
-gameMove (checkerSet, (playerId, checkerChosen, posToMove, ifChosen), _) =
-            if ifGameOver (checkerSet, (playerId, checkerChosen, posToMove, ifChosen), "")
-                    then (checkerSet, (playerId, checkerChosen, posToMove, ifChosen), "Player " ++ show playerId ++ " lost")
-                    else makeMove checkerChosen posToMove checkerSet (playerId, checkerChosen, posToMove, ifChosen)
+gameMove (WorldObject checkerSet (State playerId checkerChosen posToMove ifChosen) _) =
+            if ifGameOver (WorldObject checkerSet (State playerId checkerChosen posToMove ifChosen) "")
+                    then (WorldObject checkerSet (State playerId checkerChosen posToMove ifChosen) ("Player " ++ show playerId ++ " lost"))
+                    else makeMove checkerChosen posToMove checkerSet (State playerId checkerChosen posToMove ifChosen)
 
 --takes current position, position to check, board and state
 ifLightened :: CheckerboardPos -> CheckerboardPos -> Checkers -> State -> Bool

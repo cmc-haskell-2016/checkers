@@ -31,7 +31,7 @@ stepsPerSecond :: Int
 stepsPerSecond = 5
 
 initialWorld :: WorldObject
-initialWorld = (createCheckersObject, (1, 1, 1, False), "Choose checker to move")
+initialWorld = (WorldObject createCheckersObject (State 1 1 1 False) "Choose checker to move")
 
 -- drawing world function
 worldToPicture :: WorldObject -> Picture
@@ -45,47 +45,47 @@ calculateCoord x y = (k*4) + (div ((floor x)+205) 100)+1
   --                  | otherwise = 1
 -- key pressing handling
 eventHandler :: Event -> WorldObject -> WorldObject
-eventHandler (EventKey (SpecialKey KeyUp) Down _ _) (checkers, (playerId, checkerChosen, posToMoveChosen, False), alertMessage) =
-  (checkers, (playerId, (mod (checkerChosen + 31 - 4) 32) + 1, posToMoveChosen, False), alertMessage)
+eventHandler (EventKey (SpecialKey KeyUp) Down _ _) (WorldObject checkers (State playerId checkerChosen posToMoveChosen False) alertMessage) =
+  (WorldObject checkers (State playerId ((mod (checkerChosen + 31 - 4) 32) + 1) posToMoveChosen False) alertMessage)
 
-eventHandler (EventKey (SpecialKey KeyDown) Down _ _) (checkers, (playerId, checkerChosen, posToMoveChosen, False), alertMessage) =
-  (checkers, (playerId, (mod (checkerChosen + 31 + 4) 32) + 1, posToMoveChosen, False), alertMessage)
+eventHandler (EventKey (SpecialKey KeyDown) Down _ _) (WorldObject checkers (State playerId checkerChosen posToMoveChosen False) alertMessage) =
+  (WorldObject checkers (State playerId ((mod (checkerChosen + 31 + 4) 32) + 1) posToMoveChosen False) alertMessage)
 
-eventHandler (EventKey (SpecialKey KeyLeft) Down _ _) (checkers, (playerId, checkerChosen, posToMoveChosen, False), alertMessage) =
-  (checkers, (playerId, (mod (checkerChosen + 31 - 1) 32) + 1, posToMoveChosen, False), alertMessage)
+eventHandler (EventKey (SpecialKey KeyLeft) Down _ _) (WorldObject checkers (State playerId checkerChosen posToMoveChosen False) alertMessage) =
+  (WorldObject checkers (State playerId ((mod (checkerChosen + 31 - 1) 32) + 1) posToMoveChosen False) alertMessage)
 
-eventHandler (EventKey (SpecialKey KeyRight) Down _ _) (checkers, (playerId, checkerChosen, posToMoveChosen, False), alertMessage) =
-  (checkers, (playerId, (mod (checkerChosen + 31 + 1) 32) + 1, posToMoveChosen, False), alertMessage)
+eventHandler (EventKey (SpecialKey KeyRight) Down _ _) (WorldObject checkers (State playerId checkerChosen posToMoveChosen False) alertMessage) =
+  (WorldObject checkers (State playerId ((mod (checkerChosen + 31 + 1) 32) + 1) posToMoveChosen False) alertMessage)
 
-eventHandler (EventKey (SpecialKey KeyUp) Down _ _) (checkers, (playerId, checkerChosen, posToMoveChosen, True), alertMessage) =
-  (checkers, (playerId, checkerChosen, (mod (posToMoveChosen + 31 - 4) 32) + 1, True), alertMessage)
+eventHandler (EventKey (SpecialKey KeyUp) Down _ _) (WorldObject checkers (State playerId checkerChosen posToMoveChosen True) alertMessage) =
+  (WorldObject checkers (State playerId checkerChosen ((mod (posToMoveChosen + 31 - 4) 32) + 1) True) alertMessage)
 
-eventHandler (EventKey (SpecialKey KeyDown) Down _ _) (checkers, (playerId, checkerChosen, posToMoveChosen, True), alertMessage) =
-  (checkers, (playerId, checkerChosen, (mod (posToMoveChosen + 31 + 4) 32) + 1, True), alertMessage)
+eventHandler (EventKey (SpecialKey KeyDown) Down _ _) (WorldObject checkers (State playerId checkerChosen posToMoveChosen True) alertMessage) =
+  (WorldObject checkers (State playerId checkerChosen ((mod (posToMoveChosen + 31 + 4) 32) + 1) True) alertMessage)
 
-eventHandler (EventKey (SpecialKey KeyLeft) Down _ _) (checkers, (playerId, checkerChosen, posToMoveChosen, True), alertMessage) =
-  (checkers, (playerId, checkerChosen, (mod (posToMoveChosen + 31 - 1) 32) + 1, True), alertMessage)
+eventHandler (EventKey (SpecialKey KeyLeft) Down _ _) (WorldObject checkers (State playerId checkerChosen posToMoveChosen True) alertMessage) =
+  (WorldObject checkers (State playerId checkerChosen ((mod (posToMoveChosen + 31 - 1) 32) + 1) True) alertMessage)
 
-eventHandler (EventKey (SpecialKey KeyRight) Down _ _) (checkers, (playerId, checkerChosen, posToMoveChosen, True), alertMessage) =
-  (checkers, (playerId, checkerChosen, (mod (posToMoveChosen + 31 + 1) 32) + 1, True), alertMessage)
+eventHandler (EventKey (SpecialKey KeyRight) Down _ _) (WorldObject checkers (State playerId checkerChosen posToMoveChosen True) alertMessage) =
+  (WorldObject checkers (State playerId checkerChosen ((mod (posToMoveChosen + 31 + 1) 32) + 1) True) alertMessage)
 
 -- Testing the position if there is a checker of the player to move. Game continues according to the result
-eventHandler (EventKey (SpecialKey KeyEnter) Down _ _) (checkers, (playerId, checkerChosen, posToMoveChosen, False), alertMessage) =
-  (checkers, (playerId, checkerChosen, posToMoveChosen, True), "Choose position to move checker to")
-  -- if (isThereChecker checkerChosen checkers (playerId, checkerChosen, posToMoveChosen, False))
-  --   then (checkers, (playerId, checkerChosen, posToMoveChosen, True), "Choose position to move checker to")
-  --   else (checkers, (playerId, checkerChosen, posToMoveChosen, False), "Incorrect. Choose checker to move")
+eventHandler (EventKey (SpecialKey KeyEnter) Down _ _) (WorldObject checkers (State playerId checkerChosen posToMoveChosen False) alertMessage) =
+  (WorldObject checkers (State playerId checkerChosen posToMoveChosen True) "Choose position to move checker to")
+  -- if (isThereChecker checkerChosen checkers (State playerId checkerChosen posToMoveChosen False))
+  --   then (checkers (State playerId checkerChosen posToMoveChosen True), "Choose position to move checker to")
+  --   else (checkers (State playerId checkerChosen posToMoveChosen False), "Incorrect. Choose checker to move")
 
 -- positions are chosen. The turn starts
-eventHandler (EventKey (SpecialKey KeyEnter) Down _ _) (checkers, (playerId, checkerChosen, posToMoveChosen, True), alertMessage) =
-  gameMove (checkers, (playerId, checkerChosen, posToMoveChosen, False), alertMessage)
+eventHandler (EventKey (SpecialKey KeyEnter) Down _ _) (WorldObject checkers (State playerId checkerChosen posToMoveChosen True) alertMessage) =
+  gameMove (WorldObject checkers (State playerId checkerChosen posToMoveChosen False) alertMessage)
 
 -- mouse
-eventHandler (EventKey (MouseButton LeftButton) Down _ (x,y)) (checkers, (playerId, checkerChosen, posToMoveChosen, False), alertMessage) =
-  (checkers, (playerId, (calculateCoord x y), posToMoveChosen, True), alertMessage)
+eventHandler (EventKey (MouseButton LeftButton) Down _ (x,y)) (WorldObject checkers (State playerId checkerChosen posToMoveChosen False) alertMessage) =
+  (WorldObject checkers (State playerId (calculateCoord x y) posToMoveChosen True) alertMessage)
 
-eventHandler (EventKey (MouseButton LeftButton) Down _ (x,y)) (checkers, (playerId, checkerChosen, posToMoveChosen, True), alertMessage) =
-  gameMove (checkers, (playerId, checkerChosen, (calculateCoord x y), False), alertMessage)
+eventHandler (EventKey (MouseButton LeftButton) Down _ (x,y)) (WorldObject checkers (State playerId checkerChosen posToMoveChosen True) alertMessage) =
+  gameMove (WorldObject checkers (State playerId checkerChosen (calculateCoord x y) False) alertMessage)
 
 -- other keys pressed
 eventHandler _ w = w
@@ -111,13 +111,13 @@ infobarYOffset = 250
 
 -- collecting pictures to display
 worldElements :: WorldObject -> [Picture]
-worldElements (checkers, state, alertMessage)
+worldElements (WorldObject checkers state alertMessage)
   = (addBoard boardXOffset boardYOffset checkers state) ++ (addInfobar state alertMessage infobarXOffset infobarYOffset)
 
 -- collecting infobar elements
 addInfobar :: State -> AlertMessage -> ScreenXPos -> ScreenYPos -> [Picture]
 addInfobar state message x y
-  = (infobarBg x y) : (infobarTitle (x - 50) (y + 20) "Checkers") : (infobarText (x - 220) (y - 10) ("move of the player "  ++ (show state))) : (infobarText (x - 220) (y - 50) message) : []
+  = (infobarBg x y) : (infobarTitle (x - 50) (y + 20) "Checkers") : (infobarText (x - 220) (y - 10) ("move of the player "  ++ (show (playerId state)))) : (infobarText (x - 220) (y - 50) message) : []
 
 infobarTitle :: ScreenXPos -> ScreenYPos -> String -> Picture
 infobarTitle x y message
@@ -147,7 +147,7 @@ addBoard :: ScreenXPos -> ScreenYPos -> Checkers -> State -> [Picture]
 addBoard x y checkers state
   = addRow 8 False x y checkers state
 
--- Adding raws recursively. Raw contains cells, checkers, numbers on cell: raws left -> black_color -> x -> y -> result_picture_list
+-- Adding raws recursively. Raw contains cells, checkers numbers on cell: raws left -> black_color -> x -> y -> result_picture_list
 addRow :: Int -> Bool -> ScreenXPos -> ScreenYPos -> Checkers -> State -> [Picture]
 addRow 0 _ _ _ _ _ = []
 addRow n blackNeeded x y checkers state = (addCell 8 blackNeeded x y) ++ (addRow (n - 1) (not blackNeeded) x (y - cellOffset) checkers state) ++ (addCheckers 4 n x y checkers) ++ (addColoring 4 n x y checkers state) ++ (addNumbers 4 n x y state)
@@ -180,13 +180,13 @@ numberYOffset = 10
 -- Adding numbers recursively: stepsLeft -> rawNumber -> x -> y -> state
 addNumbers :: Int -> Int -> ScreenXPos -> ScreenYPos -> State -> [Picture]
 addNumbers 0 _ _ _ _ = []
-addNumbers stepsLeft rawNumber x y (playerId, firstPos, secondPos, firstChosen)
+addNumbers stepsLeft rawNumber x y (State playerId firstPos secondPos firstChosen)
   = (Translate (x + numberXOffset + if (mod rawNumber 2) == 0 then  cellOffset else 0) (y + numberYOffset)
   $ Scale 0.125 0.125
   $ Color red $ Text ((show number)
     ++ (if number == firstPos then "*" else "")
     ++ (if (firstChosen && (number == secondPos)) then "#" else "")))
-      : (addNumbers (stepsLeft - 1) rawNumber (x + (2 * cellOffset)) y (playerId, firstPos, secondPos, firstChosen))
+      : (addNumbers (stepsLeft - 1) rawNumber (x + (2 * cellOffset)) y (State playerId firstPos secondPos firstChosen))
       where number = (4 * (8 - rawNumber) + (4 - stepsLeft) + 1)
 
 -- just constants: offset from top left corner of the cell. Needed for drawing checkers on the cells
@@ -208,11 +208,11 @@ blackCheckerColor False = bgColor
 
 checkerColor :: Checkers -> CheckerboardPos -> Color
 checkerColor checkers position =
-  if (isThereChecker position checkers (1, 0, 0, False))
-    then whiteCheckerColor (ifKing position checkers (1, 0, 0, False))
+  if (isThereChecker position checkers (State 1 0 0 False))
+    then whiteCheckerColor (ifKing position checkers (State 1 0 0 False))
     else
-      (if (isThereChecker position checkers (0, 0, 0, False))
-        then blackCheckerColor (ifKing position checkers (0, 0, 0, False))
+      (if (isThereChecker position checkers (State 0 0 0 False))
+        then blackCheckerColor (ifKing position checkers (State 0 0 0 False))
         else black)
 
 -- Drawing checkers recursively: stepsLeft -> rawNumber -> x -> y
@@ -229,13 +229,13 @@ addCheckers stepsLeft rawNumber x y checkers
 
 addColoring :: Int -> Int -> ScreenXPos -> ScreenYPos -> Checkers -> State -> [Picture]
 addColoring 0 _ _ _ _ _ = []
-addColoring stepsLeft rawNumber x y checkers (playerId, posChosen, pos2Chosen, isPos1Chosen)
+addColoring stepsLeft rawNumber x y checkers state
    = (Translate (x + if (mod rawNumber 2) == 0 then  cellOffset else 0) y
    $ Scale 1 1
 -- red or black. Red for enlightened position
-   $ Color (if isPos1Chosen && (isThereChecker posChosen checkers (playerId, posChosen, pos2Chosen, isPos1Chosen)) && (ifLightened posChosen number checkers (playerId, posChosen, pos2Chosen, isPos1Chosen)) then red else black)
+   $ Color (if (checkerIsChosen state) && (isThereChecker (checkerChosen state) checkers state) && (ifLightened (checkerChosen state) number checkers state) then red else black)
    $ Circle 20)
-      : addColoring (stepsLeft - 1) rawNumber (x + (2 * cellOffset)) y checkers (playerId, posChosen, pos2Chosen, isPos1Chosen)
+      : addColoring (stepsLeft - 1) rawNumber (x + (2 * cellOffset)) y checkers state
       where number = (4 * (8 - rawNumber) + (4 - stepsLeft) + 1)
 
 
