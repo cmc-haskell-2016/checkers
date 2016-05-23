@@ -21,8 +21,11 @@ data Checker = Checker { checkerboardPos :: Int
                        , isKing :: Bool
                        }
 
-data State = State { playerId :: Int
+data State = State { stateId :: Int
                    , checkerChosen :: Int
                    , posToMoveChosen :: Int
                    , checkerIsChosen :: Bool
                    }
+-- stateId == 0: snd player`s move
+-- stateId == 1: fst player`s move
+-- stateId == 2: promo screen
