@@ -4,6 +4,9 @@ module Main where
 import Types
 import WorldProcessing
 import GraphicsProcessing
+import Database (runDb)
 
 main :: IO ()
-main = gameStart
+main = do
+  -- runDb
+  gameStart
