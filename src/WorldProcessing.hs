@@ -1,4 +1,4 @@
-module WorldProcessing (createCheckersObject, isThereChecker, gameMove, ifKing, ifLightened) where
+module WorldProcessing (createCheckersObject, createPlayersObject, isThereChecker, gameMove, ifKing, ifLightened) where
 
 import Types
 
@@ -11,6 +11,9 @@ createConsistentList first last | first > last = []
 -- creating the Checkers - fst Checkers ==> white, snd Checkers ==> black
 createCheckersObject :: Checkers
 createCheckersObject =(Checkers (createConsistentList 1 12) (createConsistentList 21 32))
+
+createPlayersObject :: Players
+createPlayersObject = Players (PlayerData True "" "" undefined) (PlayerData True "" "" undefined)
 
 -- Testing if there is a checker of the player in the board position
 isThereChecker :: CheckerboardPos -> Checkers -> State -> Bool
@@ -194,12 +197,12 @@ killEaten posToKill playerId checkerSet
                        )
 
 --makes a move from a consistent startPos to a yet-to-be-checked destPos
-moveFromTo :: CheckerboardPos -> CheckerboardPos -> Checkers -> [Way] -> State -> WorldObject
-moveFromTo startPos destPos checkerSet ways (State playerId checkerChosen posToMove ifChosen)
-        | list == [] = (WorldObject checkerSet (State playerId checkerChosen 0 False) "Can not move checker to this position")
+moveFromTo :: Players -> CheckerboardPos -> CheckerboardPos -> Checkers -> [Way] -> State -> WorldObject
+moveFromTo players startPos destPos checkerSet ways (State playerId checkerChosen posToMove ifChosen)
+        | list == [] = (WorldObject players checkerSet (State playerId checkerChosen 0 False) "Can not move checker to this position")
         | otherwise = if (snd (head list) == [])
-                            then (WorldObject movedBoard (State ((playerId + 1) `mod` 2) 1 1 False) "")
-                            else (WorldObject (killEaten (head (snd (head list))) playerId movedBoard)
+                            then (WorldObject players movedBoard (State ((playerId + 1) `mod` 2) 1 1 False) "")
+                            else (WorldObject players (killEaten (head (snd (head list))) playerId movedBoard)
                                   (State ((playerId + 1) `mod` 2) 1 1 False) ""
                                  )
             where list = filter (\(xs, _) -> (head xs) == destPos) ways
@@ -208,16 +211,17 @@ moveFromTo startPos destPos checkerSet ways (State playerId checkerChosen posToM
                   movedBoard = changePos startPos destPos playerId checkerSet;
 
 -- Makes a move and builds new World object
-makeMove :: CheckerboardPos -> CheckerboardPos -> Checkers -> State -> WorldObject
-makeMove startPos destPos checkerSet (State playerId checkerChosen posToMove ifChosen)
+makeMove :: Players -> CheckerboardPos -> CheckerboardPos -> Checkers -> State -> WorldObject
+makeMove players startPos destPos checkerSet (State playerId checkerChosen posToMove ifChosen)
         | (isThereChecker startPos checkerSet (State playerId checkerChosen posToMove ifChosen)) =
                     moveFromTo
+                        players
                         startPos
                         destPos
                         checkerSet
                         (possibleMoves startPos checkerSet (State playerId checkerChosen posToMove ifChosen))
                         (State playerId checkerChosen posToMove ifChosen)
-        | otherwise = (WorldObject checkerSet (State playerId 1 1 False) "Can not take checker from this position")
+        | otherwise = (WorldObject players checkerSet (State playerId 1 1 False) "Can not take checker from this position")
 
 ifPlayerHasMoves :: Int -> Checkers -> Bool
 ifPlayerHasMoves playerId checkerSet
@@ -230,7 +234,7 @@ ifPlayerHasMoves playerId checkerSet
                         (if playerId == 1 then (fstPlayer checkerSet) else (sndPlayer checkerSet))
 
 ifGameOver :: WorldObject -> Bool
-ifGameOver (WorldObject checkerSet (State playerId _ _ _) _)
+ifGameOver (WorldObject players checkerSet (State playerId _ _ _) _)
         | ifPlayerHasMoves playerId checkerSet &&
             (any (\(Checker _ isAlive _) -> isAlive) (if playerId == 1 then (sndPlayer checkerSet) else (fstPlayer checkerSet)) )
              = False
@@ -238,10 +242,10 @@ ifGameOver (WorldObject checkerSet (State playerId _ _ _) _)
            -- where idFunc = if playerId == 1 then fst else snd
 
 gameMove :: WorldObject -> WorldObject
-gameMove (WorldObject checkerSet (State playerId checkerChosen posToMove ifChosen) _) =
-            if ifGameOver (WorldObject checkerSet (State playerId checkerChosen posToMove ifChosen) "")
-                    then (WorldObject checkerSet (State playerId checkerChosen posToMove ifChosen) ("Player " ++ show playerId ++ " lost"))
-                    else makeMove checkerChosen posToMove checkerSet (State playerId checkerChosen posToMove ifChosen)
+gameMove (WorldObject players checkerSet (State playerId checkerChosen posToMove ifChosen) _) =
+            if ifGameOver (WorldObject players checkerSet (State playerId checkerChosen posToMove ifChosen) "")
+                    then (WorldObject players checkerSet (State playerId checkerChosen posToMove ifChosen) ("Player " ++ (show (2 - playerId)) ++ " lost"))
+                    else makeMove players checkerChosen posToMove checkerSet (State playerId checkerChosen posToMove ifChosen)
 
 --takes current position, position to check, board and state
 ifLightened :: CheckerboardPos -> CheckerboardPos -> Checkers -> State -> Bool
