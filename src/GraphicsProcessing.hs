@@ -9,6 +9,8 @@ import Graphics.Gloss.Interface.Pure.Game
 import Codec.BMP
 import System.IO.Unsafe
 
+import Database (processPlayerName)
+
 type ScreenXPos = Float
 type ScreenYPos = Float
 
@@ -31,7 +33,9 @@ stepsPerSecond :: Int
 stepsPerSecond = 0
 
 initialWorld :: WorldObject
-initialWorld = (WorldObject createPlayersObject createCheckersObject (State 2 1 1 False) "Choose checker to move")
+initialWorld = unsafePerformIO (do
+  name <- processPlayerName "Guest"
+  return (WorldObject createPlayersObject createCheckersObject (State 2 1 1 False) name))
 
 -- drawing world function
 worldToPicture :: WorldObject -> Picture
