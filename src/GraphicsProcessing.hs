@@ -47,10 +47,31 @@ calculateCoord x y = (k*4) + (div ((floor x)+205) 100)+1
 eventHandler :: Event -> WorldObject -> WorldObject
 -- events before game
 
--- promo screen. Capture any key
-eventHandler (EventKey _ _ _ _) (WorldObject players checkers (State 2 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
-  (WorldObject players checkers (State 1 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
 
+
+addLetter :: Players -> Char -> Players
+addLetter (Players (PlayerData a1 x1 c1 d1) (PlayerData a2 x2 c2 d2)) letter = (Players (PlayerData a1 (x1++(letter:[])) c1 d1) (PlayerData a2 x2 c2 d2))
+
+
+updatePlayer :: PlayerData -> PlayerData
+updatePlayer a = a
+
+-- promo screen. Capture any key
+-- eventHandler (EventKey _ _ _ _) (WorldObject players checkers (State 2 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+--  (WorldObject players checkers (State 1 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+--------------------------------------------------------------------
+eventHandler (EventKey (Char letter) down _ _) (WorldObject players checkers (State 2 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject (addLetter players letter) checkers (State 2 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+  
+eventHandler (EventKey (SpecialKey KeyEnter) Down _ _) (WorldObject (Players x y) checkers (State 2 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject (Players y (updatePlayer x)) checkers (State 3 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+ ------------------------------------------------------ 
+eventHandler (EventKey (Char letter) down _ _) (WorldObject players checkers (State 3 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject (addLetter players letter) checkers (State 3 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+  
+eventHandler (EventKey (SpecialKey KeyEnter) Down _ _) (WorldObject (Players x y) checkers (State 3 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject (Players (updatePlayer x) y) checkers (State 1 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) 
+  ----------------------------
 -- events during game
 eventHandler (EventKey (SpecialKey KeyUp) Down _ _) (WorldObject players checkers (State playerId checkerChosen posToMoveChosen False) alertMessage) =
   (WorldObject players checkers (State playerId ((mod (checkerChosen + 31 - 4) 32) + 1) posToMoveChosen False) alertMessage)
@@ -115,15 +136,41 @@ infobarYOffset = 250
 
 -- collecting pictures to display
 worldElements :: WorldObject -> [Picture]
-worldElements (WorldObject players checkers state alertMessage) | (stateId state) == 2 = (addInfobar state "Press any key" infobarXOffset infobarYOffset)
+worldElements (WorldObject players checkers state alertMessage) | (stateId state) == 2 = (addStartPage players infobarXOffset infobarYOffset)
+                                                                | (stateId state) == 3 = (addStartPageSec players infobarXOffset infobarYOffset)
                                                         | otherwise = (addBoard boardXOffset boardYOffset checkers state)
-                                                                      ++ (addInfobar state alertMessage infobarXOffset infobarYOffset)
+                                                                      ++ (addInfobar state players alertMessage infobarXOffset infobarYOffset)
 
+-- menu
+----------------------------------------------------------
+addStartPage :: Players -> ScreenXPos -> ScreenYPos -> [Picture]
+addStartPage  pl_log x y = (infobarBg 0 0) : (welcomeText (-75) (100) "Welcome to Checkers! <3"): (startText (-100) 0 "Please, enter your name:") : (startText (-100) (-45) (login (fstPlayerData pl_log))):[]
+
+
+addStartPageSec :: Players -> ScreenXPos -> ScreenYPos -> [Picture]
+addStartPageSec  pl_log x y = (infobarBg 0 0) : (welcomeText (-75) (100) "Welcome to Checkers! <3"): (startText (-120) 0 "Please enter your friends name") : (startText (-100) (-45) (login (fstPlayerData pl_log))):[]
+
+welcomeText :: ScreenXPos -> ScreenYPos -> String -> Picture
+welcomeText x y message
+  = Translate x y
+  $ Scale 0.25 0.25
+  $ Color black
+  $ Text message
+  
+  
+startText :: ScreenXPos -> ScreenYPos -> String -> Picture
+startText x y message
+  = Translate x y
+  $ Scale 0.13 0.13
+  $ Color black
+  $ Text message
+  
+  
 -- collecting infobar elements
-addInfobar :: State -> String -> ScreenXPos -> ScreenYPos -> [Picture]
-addInfobar state message x y
-  = (infobarBg x y) : (infobarTitle (x - 50) (y + 20) "Checkers") : (infobarText (x - 220) (y - 10) ("move of the player "  ++ (show (2 - (stateId state))))) : (infobarText (x - 220) (y - 50) message) : []
-
+addInfobar :: State -> Players -> String -> ScreenXPos -> ScreenYPos -> [Picture]
+addInfobar state player message x y 
+   | (stateId state) == 0 = (infobarBg x y) : (infobarTitle (x - 50) (y + 20) "Checkers") : (infobarText (x - 220) (y - 10) ("move of the player "  ++ (login (fstPlayerData player)))) : (infobarText (x - 220) (y - 50) message) : []
+   | otherwise = (infobarBg x y) : (infobarTitle (x - 50) (y + 20) "Checkers") : (infobarText (x - 220) (y - 10) ("move of the player "  ++ (login (sndPlayerData player)))) : (infobarText (x - 220) (y - 50) message) : []
 infobarTitle :: ScreenXPos -> ScreenYPos -> String -> Picture
 infobarTitle x y message
   = Translate x y
