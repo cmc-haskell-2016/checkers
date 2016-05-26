@@ -60,13 +60,13 @@ updatePlayer a = a
 -- eventHandler (EventKey _ _ _ _) (WorldObject players checkers (State 2 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
 --  (WorldObject players checkers (State 1 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
 --------------------------------------------------------------------
-eventHandler (EventKey (Char letter) down _ _) (WorldObject players checkers (State 2 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+eventHandler (EventKey (Char letter) Down _ _) (WorldObject players checkers (State 2 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
   (WorldObject (addLetter players letter) checkers (State 2 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
   
 eventHandler (EventKey (SpecialKey KeyEnter) Down _ _) (WorldObject (Players x y) checkers (State 2 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
   (WorldObject (Players y (updatePlayer x)) checkers (State 3 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
  ------------------------------------------------------ 
-eventHandler (EventKey (Char letter) down _ _) (WorldObject players checkers (State 3 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+eventHandler (EventKey (Char letter) Down _ _) (WorldObject players checkers (State 3 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
   (WorldObject (addLetter players letter) checkers (State 3 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
   
 eventHandler (EventKey (SpecialKey KeyEnter) Down _ _) (WorldObject (Players x y) checkers (State 3 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
