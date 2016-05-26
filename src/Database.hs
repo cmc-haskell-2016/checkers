@@ -46,7 +46,19 @@ TopList
 connStr = "host=localhost dbname=haskell_checkers user=haskell_checkers password=hc12345678 port=5433"
 
 getTable :: TopTable
-getTable = undefined
+getTable = TopTable (unsafePerformIO getRecords)
+
+getRecords :: IO ([TopTableRecord])
+getRecords = runStderrLoggingT $ withPostgresqlPool connStr 10 $ \pool -> liftIO $ do
+    flip runSqlPersistMPool pool $ do
+        runMigration migrateAll
+
+        topListRecords <- selectList [TopListDraws ==. 0] [LimitTo 10]
+        -- recById <- getBy $ TopListNameUniq "Vasilesk"
+        -- liftIO $ print recById
+        -- liftIO $ print (map getPlayerStatsForTop (map getTopListForTop topListRecords))
+        -- return (getPlayerStats (getTopList recById))
+        return (map getPlayerStatsForTop (map getTopListForTop topListRecords))
 
 updatePlayer :: PlayerData -> PlayerData
 updatePlayer a = unsafePerformIO (do
@@ -88,12 +100,20 @@ getTopList :: Maybe (Entity TopList) -> Maybe TopList
 getTopList (Just (Entity key value)) = Just value
 getTopList Nothing = Nothing
 
+getTopListForTop :: (Entity TopList) -> TopList
+getTopListForTop (Entity key value) = value
+
+
+
 getKey :: Maybe (Entity TopList) -> Key TopList
 getKey (Just (Entity key value)) = key
 
 getPlayerStats :: Maybe TopList -> PlayerStats
 getPlayerStats (Just (TopList _ m w d l)) =  (PlayerStats m w d l)
 getPlayerStats Nothing = (PlayerStats 0 0 0 0)
+
+getPlayerStatsForTop :: TopList -> TopTableRecord
+getPlayerStatsForTop (TopList n m w d l) =  (TopTableRecord n (PlayerStats m w d l))
 
 -- processStats :: Maybe PlayerStats -> IO(PlayerStats)
 -- processStats Just a = liftIO a
