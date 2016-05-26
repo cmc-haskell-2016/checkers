@@ -1,7 +1,8 @@
 module WorldProcessing (createCheckersObject, createPlayersObject, isThereChecker, gameMove, ifKing, ifLightened) where
 
 import Types
-
+import System.IO.Unsafe
+import Database (updateStats)
 -- Initial version of the board configuration
 -- this function creates a list of Checker (for example f 1 3 ==> [(1,True,False),(2,True,False),(3,True,False)]
 createConsistentList :: CheckerboardPos->CheckerboardPos->[Checker]
@@ -13,7 +14,7 @@ createCheckersObject :: Checkers
 createCheckersObject =(Checkers (createConsistentList 1 12) (createConsistentList 21 32))
 
 createPlayersObject :: Players
-createPlayersObject = Players (PlayerData True "" "" undefined) (PlayerData True "" "" undefined)
+createPlayersObject = Players (PlayerData True "" "" (PlayerStats 0 0 0 0)) (PlayerData True "" "" (PlayerStats 0 0 0 0))
 
 -- Testing if there is a checker of the player in the board position
 isThereChecker :: CheckerboardPos -> Checkers -> State -> Bool
@@ -242,10 +243,36 @@ ifGameOver (WorldObject players checkerSet (State playerId _ _ _) _)
            -- where idFunc = if playerId == 1 then fst else snd
 
 gameMove :: WorldObject -> WorldObject
-gameMove (WorldObject players checkerSet (State playerId checkerChosen posToMove ifChosen) _) =
-            if ifGameOver (WorldObject players checkerSet (State playerId checkerChosen posToMove ifChosen) "")
-                    then (WorldObject players checkerSet (State playerId checkerChosen posToMove ifChosen) ("Player " ++ (show (2 - playerId)) ++ " lost"))
-                    else makeMove players checkerChosen posToMove checkerSet (State playerId checkerChosen posToMove ifChosen)
+gameMove (WorldObject players checkerSet (State playerId checkerChosen posToMove ifChosen) _) = unsafePerformIO (do
+            a <- (updateStats (fstPlayerData players))
+            b <- (updateStats (sndPlayerData players))
+            return (if ifGameOver (WorldObject players checkerSet (State playerId checkerChosen posToMove ifChosen) "")
+                    then (WorldObject (plusWin (plusLost players playerId) (1 - playerId)) checkerSet (State playerId checkerChosen posToMove ifChosen) ("Player " ++ (show (2 - playerId)) ++ " lost"))
+                    else makeMove (plusMove players playerId) checkerChosen posToMove checkerSet (State playerId checkerChosen posToMove ifChosen)))
+
+plusMove :: Players -> Int -> Players
+plusMove (Players (PlayerData isGuestF loginF passwordF (PlayerStats m w d l)) player2) 0 =
+  (Players (PlayerData isGuestF loginF passwordF (PlayerStats (m + 1) w d l)) player2)
+plusMove (Players player1 (PlayerData isGuestF loginF passwordF (PlayerStats m w d l))) 1 =
+  (Players player1 (PlayerData isGuestF loginF passwordF (PlayerStats (m + 1) w d l)))
+
+plusWin :: Players -> Int -> Players
+plusWin (Players (PlayerData isGuestF loginF passwordF (PlayerStats m w d l)) player2) 0 =
+  (Players (PlayerData isGuestF loginF passwordF (PlayerStats m (w + 1) d l)) player2)
+plusWin (Players player1 (PlayerData isGuestF loginF passwordF (PlayerStats m w d l))) 1 =
+  (Players player1 (PlayerData isGuestF loginF passwordF (PlayerStats m (w + 1) d l)))
+
+plusDraw :: Players -> Int -> Players
+plusDraw (Players (PlayerData isGuestF loginF passwordF (PlayerStats m w d l)) player2) 0 =
+  (Players (PlayerData isGuestF loginF passwordF (PlayerStats m w (d + 1) l)) player2)
+plusDraw (Players player1 (PlayerData isGuestF loginF passwordF (PlayerStats m w d l))) 1 =
+  (Players player1 (PlayerData isGuestF loginF passwordF (PlayerStats m w (d + 1) l)))
+
+plusLost :: Players -> Int -> Players
+plusLost (Players (PlayerData isGuestF loginF passwordF (PlayerStats m w d l)) player2) 0 =
+  (Players (PlayerData isGuestF loginF passwordF (PlayerStats m w d (l + 1))) player2)
+plusLost (Players player1 (PlayerData isGuestF loginF passwordF (PlayerStats m w d l))) 1 =
+  (Players player1 (PlayerData isGuestF loginF passwordF (PlayerStats m w d (l + 1))))
 
 --takes current position, position to check, board and state
 ifLightened :: CheckerboardPos -> CheckerboardPos -> Checkers -> State -> Bool

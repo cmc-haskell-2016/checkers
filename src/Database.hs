@@ -7,7 +7,7 @@
 {-# LANGUAGE QuasiQuotes                #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
-module Database (processPlayerName) where
+module Database (updatePlayer, updateStats, getTable) where
 import           Control.Monad.IO.Class  (liftIO)
 import           Control.Monad.Logger    (runStderrLoggingT)
 import           Database.Persist
@@ -45,25 +45,78 @@ TopList
 
 connStr = "host=localhost dbname=haskell_checkers user=haskell_checkers password=hc12345678 port=5433"
 
-processPlayerName :: String -> IO (String)
-processPlayerName name = runStderrLoggingT $ withPostgresqlPool connStr 10 $ \pool -> liftIO $ do
+getTable :: TopTable
+getTable = undefined
+
+updatePlayer :: PlayerData -> PlayerData
+updatePlayer a = unsafePerformIO (do
+  statsFromDB <- getStatsByName (login a)
+  return (PlayerData ((login a) == "Guest") (login a) "" statsFromDB))
+
+updateStats :: PlayerData -> IO ()
+updateStats playerData = runStderrLoggingT $ withPostgresqlPool connStr 10 $ \pool -> liftIO $ do
+    flip runSqlPersistMPool pool $ do
+        runMigration migrateAll
+
+        recById <- getBy $ TopListNameUniq (login playerData)
+        liftIO $ print recById
+        liftIO $ makeStatsUpdateById ( moves (stats playerData)) ( wins (stats playerData)) ( draws (stats playerData)) ( losts (stats playerData)) (getKey recById)
+        return ()
+
+makeStatsUpdateById :: Int -> Int -> Int -> Int -> Key TopList -> IO ()
+makeStatsUpdateById m w d l key = runStderrLoggingT $ withPostgresqlPool connStr 10 $ \pool -> liftIO $ do
+    flip runSqlPersistMPool pool $ do
+        runMigration migrateAll
+
+        update key [TopListMoves =. m, TopListWins =. w, TopListDraws =. d, TopListLosts =. l]
+        return ()
+
+getStatsByName :: String -> IO (PlayerStats)
+getStatsByName name = runStderrLoggingT $ withPostgresqlPool connStr 10 $ \pool -> liftIO $ do
     flip runSqlPersistMPool pool $ do
         runMigration migrateAll
 
         recById <- getBy $ TopListNameUniq name
-        return (getPlayerName (getTopList recById))
+        liftIO $ if (testRes recById) then (print "Player was found!") else (insertRecord name (PlayerStats 0 0 0 0))
+        return (getPlayerStats (getTopList recById))
 
-updatePlayer :: PlayerData -> PlayerData
-updatePlayer a = unsafePerformIO (do
-  name <- processPlayerName "Guest"
-  isAGuest <- (name == "Guest")
-  return (PlayerData isAGuest (login a) "" (stats a)))
+testRes :: Maybe (Entity TopList) -> Bool
+testRes Nothing = False
+testRes _ = True
 
-getStatsByName :: String -> PlayerStats
-getStatsByName = undefined
+getTopList :: Maybe (Entity TopList) -> Maybe TopList
+getTopList (Just (Entity key value)) = Just value
+getTopList Nothing = Nothing
 
-getTable :: TopTable
-getTable = undefined
+getKey :: Maybe (Entity TopList) -> Key TopList
+getKey (Just (Entity key value)) = key
+
+getPlayerStats :: Maybe TopList -> PlayerStats
+getPlayerStats (Just (TopList _ m w d l)) =  (PlayerStats m w d l)
+getPlayerStats Nothing = (PlayerStats 0 0 0 0)
+
+-- processStats :: Maybe PlayerStats -> IO(PlayerStats)
+-- processStats Just a = liftIO a
+
+
+insertRecord :: String -> PlayerStats -> IO ()
+insertRecord name (PlayerStats pMoves pWins pDraws pLosts) = runStderrLoggingT $ withPostgresqlPool connStr 10 $ \pool -> liftIO $ do
+    flip runSqlPersistMPool pool $ do
+        runMigration migrateAll
+
+        insert_ $ TopList name pMoves pWins pDraws pLosts
+
+-- getPlayerName :: Maybe TopList -> String
+-- getPlayerName (Just (TopList st _ _ _ _)) = st
+-- getPlayerName Nothing = "Don`t know you!"
+
+-- processPlayerName :: String -> IO (String)
+-- processPlayerName name = runStderrLoggingT $ withPostgresqlPool connStr 10 $ \pool -> liftIO $ do
+--     flip runSqlPersistMPool pool $ do
+--         runMigration migrateAll
+--
+--         recById <- getBy $ TopListNameUniq name
+--         return (getPlayerName (getTopList recById))
 
 -- addGuest :: IO (String)
 -- addGuest = runStderrLoggingT $ withPostgresqlPool connStr 10 $ \pool -> liftIO $ do
@@ -88,13 +141,7 @@ getTable = undefined
 --         -- topList <- get topListId
 --         -- delete topListId
 
-getTopList :: Maybe (Entity TopList) -> Maybe TopList
-getTopList (Just (Entity key value)) = Just value
-getTopList Nothing = Nothing
 
-getPlayerName :: Maybe TopList -> String
-getPlayerName (Just (TopList st _ _ _ _)) = st
-getPlayerName Nothing = "Fuck you!"
 
 
 

@@ -9,7 +9,7 @@ import Graphics.Gloss.Interface.Pure.Game
 import Codec.BMP
 import System.IO.Unsafe
 
-import Database (processPlayerName)
+import Database (updatePlayer, getTable)
 
 type ScreenXPos = Float
 type ScreenYPos = Float
@@ -30,12 +30,10 @@ bgColor = makeColor 0.7 0.7 0.8 1
 
 -- just a constant
 stepsPerSecond :: Int
-stepsPerSecond = 0
+stepsPerSecond = 2
 
 initialWorld :: WorldObject
-initialWorld = unsafePerformIO (do
-  name <- processPlayerName "Guest"
-  return (WorldObject createPlayersObject createCheckersObject (State 2 1 1 False) name))
+initialWorld = WorldObject createPlayersObject createCheckersObject (State 2 1 1 False) "Choose checker to move"
 
 -- drawing world function
 worldToPicture :: WorldObject -> Picture
@@ -57,8 +55,8 @@ addLetter :: Players -> Char -> Players
 addLetter (Players (PlayerData a1 x1 c1 d1) (PlayerData a2 x2 c2 d2)) letter = (Players (PlayerData a1 (x1++(letter:[])) c1 d1) (PlayerData a2 x2 c2 d2))
 
 
-updatePlayer :: PlayerData -> PlayerData
-updatePlayer a = a
+-- updatePlayer :: PlayerData -> PlayerData
+-- updatePlayer a = a
 
 -- promo screen. Capture any key
 -- eventHandler (EventKey _ _ _ _) (WorldObject players checkers (State 2 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
@@ -66,15 +64,15 @@ updatePlayer a = a
 --------------------------------------------------------------------
 eventHandler (EventKey (Char letter) Down _ _) (WorldObject players checkers (State 2 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
   (WorldObject (addLetter players letter) checkers (State 2 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
-  
+
 eventHandler (EventKey (SpecialKey KeyEnter) Down _ _) (WorldObject (Players x y) checkers (State 2 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
   (WorldObject (Players y (updatePlayer x)) checkers (State 3 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
- ------------------------------------------------------ 
+ ------------------------------------------------------
 eventHandler (EventKey (Char letter) Down _ _) (WorldObject players checkers (State 3 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
   (WorldObject (addLetter players letter) checkers (State 3 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
-  
+
 eventHandler (EventKey (SpecialKey KeyEnter) Down _ _) (WorldObject (Players x y) checkers (State 3 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
-  (WorldObject (Players (updatePlayer x) y) checkers (State 1 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) 
+  (WorldObject (Players (updatePlayer x) y) checkers (State 1 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
   ----------------------------
 -- events during game
 eventHandler (EventKey (SpecialKey KeyUp) Down _ _) (WorldObject players checkers (State playerId checkerChosen posToMoveChosen False) alertMessage) =
@@ -160,19 +158,19 @@ welcomeText x y message
   $ Scale 0.25 0.25
   $ Color black
   $ Text message
-  
-  
+
+
 startText :: ScreenXPos -> ScreenYPos -> String -> Picture
 startText x y message
   = Translate x y
   $ Scale 0.13 0.13
   $ Color black
   $ Text message
-  
-  
+
+
 -- collecting infobar elements
 addInfobar :: State -> Players -> String -> ScreenXPos -> ScreenYPos -> [Picture]
-addInfobar state player message x y 
+addInfobar state player message x y
    | (stateId state) == 0 = (infobarBg x y) : (infobarTitle (x - 50) (y + 20) "Checkers") : (infobarText (x - 220) (y - 10) ("move of the player "  ++ (login (fstPlayerData player)))) : (infobarText (x - 220) (y - 50) message) : []
    | otherwise = (infobarBg x y) : (infobarTitle (x - 50) (y + 20) "Checkers") : (infobarText (x - 220) (y - 10) ("move of the player "  ++ (login (sndPlayerData player)))) : (infobarText (x - 220) (y - 50) message) : []
 infobarTitle :: ScreenXPos -> ScreenYPos -> String -> Picture
