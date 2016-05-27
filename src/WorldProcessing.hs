@@ -2,7 +2,9 @@ module WorldProcessing (createCheckersObject, createPlayersObject, isThereChecke
 
 import Types
 import System.IO.Unsafe
-import Database (updateStats)
+import DatabaseProcessing (runDB, updateStats)
+
+import Database.Persist.Sql
 -- Initial version of the board configuration
 -- this function creates a list of Checker (for example f 1 3 ==> [(1,True,False),(2,True,False),(3,True,False)]
 createConsistentList :: CheckerboardPos->CheckerboardPos->[Checker]
@@ -242,10 +244,11 @@ ifGameOver (WorldObject players checkerSet (State playerId _ _ _) _)
         | otherwise = True
            -- where idFunc = if playerId == 1 then fst else snd
 
-gameMove :: WorldObject -> WorldObject
-gameMove (WorldObject players checkerSet (State playerId checkerChosen posToMove ifChosen) _) = unsafePerformIO (do
-            a <- (updateStats (fstPlayerData players))
-            b <- (updateStats (sndPlayerData players))
+gameMove :: ConnectionPool -> WorldObject -> WorldObject
+gameMove pool (WorldObject players checkerSet (State playerId checkerChosen posToMove ifChosen) _) = unsafePerformIO (do
+            runDB pool $ do
+              updateStats (fstPlayerData players)
+              updateStats (sndPlayerData players)
             return (if ifGameOver (WorldObject players checkerSet (State playerId checkerChosen posToMove ifChosen) "")
                     then (WorldObject (plusWin (plusLost players playerId) (1 - playerId)) checkerSet (State playerId checkerChosen posToMove ifChosen) ("Player " ++ (show (2 - playerId)) ++ " lost"))
                     else makeMove (plusMove players playerId) checkerChosen posToMove checkerSet (State playerId checkerChosen posToMove ifChosen)))

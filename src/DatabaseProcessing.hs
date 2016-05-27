@@ -7,7 +7,7 @@
 {-# LANGUAGE QuasiQuotes                #-}
 {-# LANGUAGE TemplateHaskell            #-}
 {-# LANGUAGE TypeFamilies               #-}
-module Database (updatePlayer, updateStats, getTable) where
+module DatabaseProcessing (runDB, updatePlayer, updateStats, getTable) where
 import           Control.Monad.IO.Class  (liftIO)
 import           Control.Monad.Logger    (runStderrLoggingT)
 import           Database.Persist
@@ -17,6 +17,7 @@ import           Database.Persist.TH
 import System.IO.Unsafe
 
 import Types
+import           Control.Monad.Trans
 
 share [mkPersist sqlSettings, mkMigrate "migrateAll"] [persistLowerCase|
 Person
@@ -48,6 +49,9 @@ connStr = "host=localhost dbname=haskell_checkers user=haskell_checkers password
 getTable :: TopTable
 getTable = TopTable (unsafePerformIO getRecords)
 
+runDB :: MonadIO m => ConnectionPool -> SqlPersistM a -> m a
+runDB pool m = liftIO (runSqlPersistMPool m pool)
+
 getRecords :: IO ([TopTableRecord])
 getRecords = runStderrLoggingT $ withPostgresqlPool connStr 10 $ \pool -> liftIO $ do
     flip runSqlPersistMPool pool $ do
@@ -65,23 +69,20 @@ updatePlayer a = unsafePerformIO (do
   statsFromDB <- getStatsByName (login a)
   return (PlayerData ((login a) == "Guest") (login a) "" statsFromDB))
 
-updateStats :: PlayerData -> IO ()
-updateStats playerData = runStderrLoggingT $ withPostgresqlPool connStr 10 $ \pool -> liftIO $ do
-    flip runSqlPersistMPool pool $ do
-        runMigration migrateAll
-
+updateStats :: PlayerData -> SqlPersistM ()
+updateStats playerData = do
         recById <- getBy $ TopListNameUniq (login playerData)
         liftIO $ print recById
-        liftIO $ makeStatsUpdateById ( moves (stats playerData)) ( wins (stats playerData)) ( draws (stats playerData)) ( losts (stats playerData)) (getKey recById)
-        return ()
+        makeStatsUpdateById ( moves (stats playerData)) ( wins (stats playerData)) ( draws (stats playerData)) ( losts (stats playerData)) (getKey recById)
 
-makeStatsUpdateById :: Int -> Int -> Int -> Int -> Key TopList -> IO ()
-makeStatsUpdateById m w d l key = runStderrLoggingT $ withPostgresqlPool connStr 10 $ \pool -> liftIO $ do
-    flip runSqlPersistMPool pool $ do
-        runMigration migrateAll
-
-        update key [TopListMoves =. m, TopListWins =. w, TopListDraws =. d, TopListLosts =. l]
-        return ()
+makeStatsUpdateById :: Int -> Int -> Int -> Int -> Key TopList -> SqlPersistM ()
+-- makeStatsUpdateById m w d l key = runStderrLoggingT $ withPostgresqlPool connStr 10 $ \pool -> liftIO $ do
+--     flip runSqlPersistMPool pool $ do
+--         runMigration migrateAll
+--
+--         update key [TopListMoves =. m, TopListWins =. w, TopListDraws =. d, TopListLosts =. l]
+--         return ()
+makeStatsUpdateById m w d l key = update key [TopListMoves =. m, TopListWins =. w, TopListDraws =. d, TopListLosts =. l]
 
 getStatsByName :: String -> IO (PlayerStats)
 getStatsByName name = runStderrLoggingT $ withPostgresqlPool connStr 10 $ \pool -> liftIO $ do
@@ -165,38 +166,38 @@ insertRecord name (PlayerStats pMoves pWins pDraws pLosts) = runStderrLoggingT $
 
 
 
-parser2 :: TopList -> String
-parser2 (TopList st _ _ _ _) = st
+-- parser2 :: TopList -> String
+-- parser2 (TopList st _ _ _ _) = st
 
 -- fetchName :: Maybe TopList -> String
 -- fetchName Nothing = "No user with the name!"
 -- fetchName (Just (TopList st _ _ _ _)) = st
-
-runDb :: IO ()
-runDb = runStderrLoggingT $ withPostgresqlPool connStr 10 $ \pool -> liftIO $ do
-    flip runSqlPersistMPool pool $ do
-        runMigration migrateAll
-
-        johnId <- insert $ Person "John Doe" $ Just 35
-        janeId <- insert $ Person "Jane Doe" Nothing
-
-        insert $ BlogPost "My fr1st p0st" johnId
-        insert $ BlogPost "One more for good measure" johnId
-
-        oneJohnPost <- selectList [BlogPostAuthorId ==. johnId] [LimitTo 1]
-        liftIO $ print (oneJohnPost :: [Entity BlogPost])
-        -- [Entity {entityKey = BlogPostKey {unBlogPostKey = SqlBackendKey {unSqlBackendKey = 11}}, entityVal = BlogPost {blogPostTitle = "My fr1st p0st", blogPostAuthorId = PersonKey {unPersonKey = SqlBackendKey {unSqlBackendKey = 11}}}}]
-
-        john <- get johnId
-        liftIO $ print (john :: Maybe Person)
-        -- Just (Person {personName = "John Doe", personAge = Just 35})
-
-        -- personId <- insert $ Person2 "Michael" "Snoyman" 26
-        -- maybePerson <- getBy $ Person2Name "Michael" "Snoyman"
-        -- case maybePerson of
-        --     Nothing -> liftIO $ putStrLn "Just kidding, not really there"
-        --     Just (Entity personId person) -> liftIO $ print person
-        --     -- Person2 {person2FirstName = "Michael", person2LastName = "Snoyman", person2Age = 26}
-
-        delete janeId
-        deleteWhere [BlogPostAuthorId ==. johnId]
+--
+-- runDb :: IO ()
+-- runDb = runStderrLoggingT $ withPostgresqlPool connStr 10 $ \pool -> liftIO $ do
+--     flip runSqlPersistMPool pool $ do
+--         runMigration migrateAll
+--
+--         johnId <- insert $ Person "John Doe" $ Just 35
+--         janeId <- insert $ Person "Jane Doe" Nothing
+--
+--         insert $ BlogPost "My fr1st p0st" johnId
+--         insert $ BlogPost "One more for good measure" johnId
+--
+--         oneJohnPost <- selectList [BlogPostAuthorId ==. johnId] [LimitTo 1]
+--         liftIO $ print (oneJohnPost :: [Entity BlogPost])
+--         -- [Entity {entityKey = BlogPostKey {unBlogPostKey = SqlBackendKey {unSqlBackendKey = 11}}, entityVal = BlogPost {blogPostTitle = "My fr1st p0st", blogPostAuthorId = PersonKey {unPersonKey = SqlBackendKey {unSqlBackendKey = 11}}}}]
+--
+--         john <- get johnId
+--         liftIO $ print (john :: Maybe Person)
+--         -- Just (Person {personName = "John Doe", personAge = Just 35})
+--
+--         -- personId <- insert $ Person2 "Michael" "Snoyman" 26
+--         -- maybePerson <- getBy $ Person2Name "Michael" "Snoyman"
+--         -- case maybePerson of
+--         --     Nothing -> liftIO $ putStrLn "Just kidding, not really there"
+--         --     Just (Entity personId person) -> liftIO $ print person
+--         --     -- Person2 {person2FirstName = "Michael", person2LastName = "Snoyman", person2Age = 26}
+--
+--         delete janeId
+--         deleteWhere [BlogPostAuthorId ==. johnId]
