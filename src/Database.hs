@@ -53,7 +53,7 @@ getRecords = runStderrLoggingT $ withPostgresqlPool connStr 10 $ \pool -> liftIO
     flip runSqlPersistMPool pool $ do
         runMigration migrateAll
 
-        topListRecords <- selectList [TopListDraws ==. 0] [LimitTo 10]
+        topListRecords <- selectList [TopListDraws ==. 0] [Desc TopListWins, Asc TopListLosts, LimitTo 10]
         -- recById <- getBy $ TopListNameUniq "Vasilesk"
         -- liftIO $ print recById
         -- liftIO $ print (map getPlayerStatsForTop (map getTopListForTop topListRecords))

@@ -1,6 +1,7 @@
 module GraphicsProcessing (gameStart) where
 
 import Types
+import Prelude
 import WorldProcessing
 
 import Graphics.Gloss
@@ -33,7 +34,7 @@ stepsPerSecond :: Int
 stepsPerSecond = 2
 
 initialWorld :: WorldObject
-initialWorld = WorldObject createPlayersObject createCheckersObject (State 2 1 1 False) "Choose checker to move"
+initialWorld = (WorldObject createPlayersObject createCheckersObject (State 2 1 1 False) "Choose checker to move")
 
 -- drawing world function
 worldToPicture :: WorldObject -> Picture
@@ -43,6 +44,14 @@ worldToPicture world = Pictures (worldElements world)
 calculateCoord :: Float -> Float -> Int
 calculateCoord x y = (k*4) + (div ((floor x)+205) 100)+1
                       where k = div (150 - (floor y)) 50
+
+calculateState :: Float -> Float -> Int -> Int
+calculateState x y lastPos | (x < -350) || (x > 350) = lastPos
+                           | (y <= 150) && (y >= 50) = 4
+                           | (y <= 0) && (y >= -100) = 5
+                           | (y <= -150) && (y >= -250) = 6
+                           | otherwise = lastPos
+
 --calculateCoord x y | x < -180 && x >= -130 = 10
   --                  | otherwise = 1
 -- key pressing handling
@@ -54,6 +63,13 @@ eventHandler :: Event -> WorldObject -> WorldObject
 addLetter :: Players -> Char -> Players
 addLetter (Players (PlayerData a1 x1 c1 d1) (PlayerData a2 x2 c2 d2)) letter = (Players (PlayerData a1 (x1++(letter:[])) c1 d1) (PlayerData a2 x2 c2 d2))
 
+deleteLast :: [a] -> [a]
+deleteLast [] = []
+deleteLast (x:[]) = []
+deleteLast (x:xs) = x : (deleteLast xs)
+
+deleteLetter :: Players -> Players
+deleteLetter (Players (PlayerData a1 x1 c1 d1) (PlayerData a2 x2 c2 d2)) = (Players (PlayerData a1 (deleteLast x1) c1 d1) (PlayerData a2 x2 c2 d2))
 
 -- updatePlayer :: PlayerData -> PlayerData
 -- updatePlayer a = a
@@ -67,12 +83,87 @@ eventHandler (EventKey (Char letter) Down _ _) (WorldObject players checkers (St
 
 eventHandler (EventKey (SpecialKey KeyEnter) Down _ _) (WorldObject (Players x y) checkers (State 2 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
   (WorldObject (Players y (updatePlayer x)) checkers (State 3 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+
+eventHandler (EventKey (SpecialKey KeyBackspace) Down _ _) (WorldObject players checkers (State 2 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject (deleteLetter players) checkers (State 2 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+
+eventHandler (EventKey (SpecialKey KeyDelete) Down _ _) (WorldObject players checkers (State 2 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject (deleteLetter players) checkers (State 2 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
  ------------------------------------------------------
 eventHandler (EventKey (Char letter) Down _ _) (WorldObject players checkers (State 3 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
   (WorldObject (addLetter players letter) checkers (State 3 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
 
 eventHandler (EventKey (SpecialKey KeyEnter) Down _ _) (WorldObject (Players x y) checkers (State 3 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
-  (WorldObject (Players (updatePlayer x) y) checkers (State 1 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+  (WorldObject (Players (updatePlayer x) y) checkers (State 4 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+
+eventHandler (EventKey (SpecialKey KeyBackspace) Down _ _) (WorldObject players checkers (State 3 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject (deleteLetter players) checkers (State 3 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+
+eventHandler (EventKey (SpecialKey KeyDelete) Down _ _) (WorldObject players checkers (State 3 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject (deleteLetter players) checkers (State 3 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+-- !!!! stats
+
+eventHandler (EventKey (SpecialKey KeyEnter) Down _ _) (WorldObject (Players x y) checkers (State 5 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject (Players (updatePlayer x) y) checkers (State 14 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+
+eventHandler (EventKey (SpecialKey KeyEnter) Down _ _) (WorldObject (Players x y) checkers (State 7 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject (Players (updatePlayer x) y) checkers (State 14 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+
+eventHandler (EventKey (SpecialKey KeyEnter) Down _ _) (WorldObject players checkers (State 4 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject players checkers (State 1 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+
+eventHandler (EventKey (SpecialKey KeyEnter) Down _ _) (WorldObject (Players x y) checkers (State 6 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject (Players (updatePlayer x) y) checkers (State (-1) checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+
+eventHandler (EventKey (SpecialKey KeyEnter) Down _ _) (WorldObject players checkers (State 8 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject players checkers (State 14 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+
+  ---------
+eventHandler (EventKey (SpecialKey KeyEnter) Down _ _) (WorldObject players checkers (State 14 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject players checkers (State 7 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+
+eventHandler (EventKey (SpecialKey KeyEnter) Down _ _) (WorldObject players checkers (State 15 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject players checkers (State 8 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+
+eventHandler (EventKey (SpecialKey KeyEnter) Down _ _) (WorldObject players checkers (State 16 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject players checkers (State 4 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+-- up and down
+eventHandler (EventKey (SpecialKey KeyUp) Down _ _) (WorldObject players checkers (State 4 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject players checkers (State 6 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+
+eventHandler (EventKey (SpecialKey KeyUp) Down _ _) (WorldObject players checkers (State 5 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject players checkers (State 4 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+
+eventHandler (EventKey (SpecialKey KeyUp) Down _ _) (WorldObject players checkers (State 6 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject players checkers (State 5 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+
+eventHandler (EventKey (SpecialKey KeyDown) Down _ _) (WorldObject players checkers (State 5 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject players checkers (State 6 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+
+eventHandler (EventKey (SpecialKey KeyDown) Down _ _) (WorldObject players checkers (State 4 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject players checkers (State 5 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+
+eventHandler (EventKey (SpecialKey KeyDown) Down _ _) (WorldObject players checkers (State 6 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject players checkers (State 4 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+
+  -----------------------------------------------------
+eventHandler (EventKey (SpecialKey KeyUp) Down _ _) (WorldObject players checkers (State 14 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject players checkers (State 16 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+
+eventHandler (EventKey (SpecialKey KeyUp) Down _ _) (WorldObject players checkers (State 15 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject players checkers (State 14 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+
+eventHandler (EventKey (SpecialKey KeyUp) Down _ _) (WorldObject players checkers (State 16 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject players checkers (State 15 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+
+eventHandler (EventKey (SpecialKey KeyDown) Down _ _) (WorldObject players checkers (State 15 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject players checkers (State 16 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+
+eventHandler (EventKey (SpecialKey KeyDown) Down _ _) (WorldObject players checkers (State 14 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject players checkers (State 15 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+
+eventHandler (EventKey (SpecialKey KeyDown) Down _ _) (WorldObject players checkers (State 16 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject players checkers (State 14 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
   ----------------------------
 -- events during game
 eventHandler (EventKey (SpecialKey KeyUp) Down _ _) (WorldObject players checkers (State playerId checkerChosen posToMoveChosen False) alertMessage) =
@@ -108,11 +199,42 @@ eventHandler (EventKey (SpecialKey KeyEnter) Down _ _) (WorldObject players chec
   gameMove (WorldObject players checkers (State playerId checkerChosen posToMoveChosen False) alertMessage)
 
 -- mouse
-eventHandler (EventKey (MouseButton LeftButton) Down _ (x,y)) (WorldObject players checkers (State playerId checkerChosen posToMoveChosen False) alertMessage) =
-  (WorldObject players checkers (State playerId (calculateCoord x y) posToMoveChosen True) alertMessage)
+eventHandler (EventKey (MouseButton LeftButton) Down _ (x,y)) (WorldObject players checkers (State 1 checkerChosen posToMoveChosen False) alertMessage) =
+  (WorldObject players checkers (State 1 (calculateCoord x y) posToMoveChosen True) alertMessage)
 
-eventHandler (EventKey (MouseButton LeftButton) Down _ (x,y)) (WorldObject players checkers (State playerId checkerChosen posToMoveChosen True) alertMessage) =
-  gameMove (WorldObject players checkers (State playerId checkerChosen (calculateCoord x y) False) alertMessage)
+eventHandler (EventKey (MouseButton LeftButton) Down _ (x,y)) (WorldObject players checkers (State 1 checkerChosen posToMoveChosen True) alertMessage) =
+  gameMove (WorldObject players checkers (State 1 checkerChosen (calculateCoord x y) False) alertMessage)
+
+eventHandler (EventKey (MouseButton LeftButton) Down _ (x,y)) (WorldObject players checkers (State 0 checkerChosen posToMoveChosen False) alertMessage) =
+  (WorldObject players checkers (State 0 (calculateCoord x y) posToMoveChosen True) alertMessage)
+
+eventHandler (EventKey (MouseButton LeftButton) Down _ (x,y)) (WorldObject players checkers (State 0 checkerChosen posToMoveChosen True) alertMessage) =
+  gameMove (WorldObject players checkers (State 0 checkerChosen (calculateCoord x y) False) alertMessage)
+
+----------------------------------------------------------------------------------------------------------------------
+
+eventHandler (EventKey (MouseButton LeftButton) Down _ (x,y)) (WorldObject players checkers (State 4 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject players checkers (State (calculateState x y 4) checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+
+eventHandler (EventKey (MouseButton LeftButton) Down _ (x,y)) (WorldObject players checkers (State 5 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject players checkers (State (calculateState x y 5) checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+
+eventHandler (EventKey (MouseButton LeftButton) Down _ (x,y)) (WorldObject players checkers (State 6 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject players checkers (State (calculateState x y 6) checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+
+------------------
+
+eventHandler (EventKey (MouseButton LeftButton) Down _ (x,y)) (WorldObject players checkers (State 14 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject players checkers (State ((calculateState x y 4) + 10) checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+
+eventHandler (EventKey (MouseButton LeftButton) Down _ (x,y)) (WorldObject players checkers (State 15 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject players checkers (State ((calculateState x y 5) + 10) checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+
+eventHandler (EventKey (MouseButton LeftButton) Down _ (x,y)) (WorldObject players checkers (State 16 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+  (WorldObject players checkers (State ((calculateState x y 6) + 10) checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
+
+--eventHandler (EventKey (MouseButton LeftButton) Down _ (x,y)) (WorldObject players checkers (State 3 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+ -- (WorldObject players checkers (State playerId (calculateCoord x y) posToMoveChosen True) alertMessage)
 
 -- other keys pressed
 eventHandler _ w = w
@@ -136,21 +258,141 @@ infobarXOffset = 0
 infobarYOffset :: ScreenYPos
 infobarYOffset = 250
 
+statsLeftX :: ScreenXPos
+statsLeftX = -210
+
+statsMiddleX :: ScreenXPos
+statsMiddleX  = 0
+
+statsRightX :: ScreenXPos
+statsRightX  = 210
+
 -- collecting pictures to display
 worldElements :: WorldObject -> [Picture]
 worldElements (WorldObject players checkers state alertMessage) | (stateId state) == 2 = (addStartPage players infobarXOffset infobarYOffset)
                                                                 | (stateId state) == 3 = (addStartPageSec players infobarXOffset infobarYOffset)
-                                                        | otherwise = (addBoard boardXOffset boardYOffset checkers state)
+                                                                | (stateId state) == 4 = (addMenuFst players infobarXOffset infobarYOffset)
+                                                                | (stateId state) == 5 = (addMenuSnd players infobarXOffset infobarYOffset)
+                                                                | (stateId state) == 6 = (addMenuTrd players infobarXOffset infobarYOffset)
+                                                                | (stateId state) == 7 = (addStats players)
+                                                                | (stateId state) == 8 = (addBoardStats (getTable))
+                                                                | (stateId state) == 14 = (addMenuStatsFst players infobarXOffset infobarYOffset)
+                                                                | (stateId state) == 15 = (addMenuStatsSnd players infobarXOffset infobarYOffset)
+                                                                | (stateId state) == 16 = (addMenuStatsTrd players infobarXOffset infobarYOffset)
+                                                                | (stateId state) == (-1) = (addEndMenu)
+                                                                | otherwise = (addBoard boardXOffset boardYOffset checkers state)
                                                                       ++ (addInfobar state players alertMessage infobarXOffset infobarYOffset)
 
 -- menu
 ----------------------------------------------------------
 addStartPage :: Players -> ScreenXPos -> ScreenYPos -> [Picture]
-addStartPage  pl_log x y = (infobarBg 0 0) : (welcomeText (-75) (100) "Welcome to Checkers! <3"): (startText (-100) 0 "Please, enter your name:") : (startText (-100) (-45) (login (fstPlayerData pl_log))):[]
+addStartPage  pl_log x y = (pictureBg 0 0):(infobarBg 0 0) : (welcomeText (-200) (45) "Welcome to Checkers! <3"): (startText (-100) 0 "Please, enter your name:") : (startText (-100) (-45) (login (fstPlayerData pl_log))):[]
 
 
 addStartPageSec :: Players -> ScreenXPos -> ScreenYPos -> [Picture]
-addStartPageSec  pl_log x y = (infobarBg 0 0) : (welcomeText (-75) (100) "Welcome to Checkers! <3"): (startText (-120) 0 "Please enter your friends name") : (startText (-100) (-45) (login (fstPlayerData pl_log))):[]
+addStartPageSec  pl_log x y = (pictureBg 0 0):(infobarBg 0 0) : (welcomeText (-200) (45) "Welcome to Checkers! <3"): (startText (-120) 0 "Please enter your friends name") : (startText (-100) (-45) (login (fstPlayerData pl_log))):[]
+
+addMenuFst :: Players -> ScreenXPos -> ScreenYPos -> [Picture]
+addMenuFst player x y = (pictureBg 0 0):(infobarBg x y) : (menuBg 0 100): (chosenText (-200) 100 "Start Game"): (menuBg 0 (-50)): (welcomeText (-200) (-50) "Statistics"): (menuBg 0 (-200)): (welcomeText (-200) (-200) "Exit"): (infobarTitle (x - 50) (y + 20) "Checkers")
+  :(infobarText (x - 150) (y - 10) ("Welcome, " ++ (login (sndPlayerData player)) ++ " and " ++ (login (fstPlayerData player))++ "!"))
+  :(infobarText (x - 290) (y - 50) "Use keys or the mouse to choose. Press enter to continue"):[]
+
+addMenuSnd :: Players -> ScreenXPos -> ScreenYPos -> [Picture]
+addMenuSnd player x y =  (pictureBg 0 0):(infobarBg x y) : (menuBg 0 100): (welcomeText (-200) 100 "Start Game"): (menuBg 0 (-50)): (chosenText (-200) (-50) "Statistics"): (menuBg 0 (-200)): (welcomeText (-200) (-200) "Exit"): (infobarTitle (x - 50) (y + 20) "Checkers")
+   :(infobarText (x - 150) (y - 10) ("Welcome, " ++ (login (sndPlayerData player)) ++ " and " ++ (login (fstPlayerData player))++ "!"))
+   :(infobarText (x - 290) (y - 50) "Use keys or the mouse to choose. Press enter to continue"):[]
+
+addMenuTrd :: Players -> ScreenXPos -> ScreenYPos -> [Picture]
+addMenuTrd player x y =  (pictureBg 0 0):(infobarBg x y) : (menuBg 0 100): (welcomeText (-200) 100 "Start Game"): (menuBg 0 (-50)): (welcomeText (-200) (-50) "Statistics"): (menuBg 0 (-200)): (chosenText (-200) (-200) "Exit"): (infobarTitle (x - 50) (y + 20) "Checkers")
+           : (infobarText (x - 150) (y - 10) ("Welcome, " ++ (login (sndPlayerData player)) ++ " and " ++ (login (fstPlayerData player)) ++ "!"))
+           :(infobarText (x - 290) (y - 50) "Use keys or the mouse to choose. Press enter to continue"): []
+
+addMenuStatsFst :: Players -> ScreenXPos -> ScreenYPos -> [Picture]
+addMenuStatsFst player x y = (pictureBg 0 0):(infobarBg x y) : (menuBg 0 100): (chosenText (-200) 100 "Player statistics"): (menuBg 0 (-50)): (welcomeText (-200) (-50) "Record board"): (menuBg 0 (-200)): (welcomeText (-200) (-200) "Back"): (infobarTitle (x - 50) (y + 20) "Checkers")
+  :(infobarText (x - 150) (y - 10) ("Welcome, " ++ (login (sndPlayerData player)) ++ " and " ++ (login (fstPlayerData player))++ "!"))
+  :(infobarText (x - 290) (y - 50) "Use keys or the mouse to choose. Press enter to continue"):[]
+
+addMenuStatsSnd :: Players -> ScreenXPos -> ScreenYPos -> [Picture]
+addMenuStatsSnd player x y =  (pictureBg 0 0):(infobarBg x y) : (menuBg 0 100): (welcomeText (-200) 100 "Player statistics"): (menuBg 0 (-50)): (chosenText (-200) (-50) "Record board"): (menuBg 0 (-200)): (welcomeText (-200) (-200) "Back"): (infobarTitle (x - 50) (y + 20) "Checkers")
+   :(infobarText (x - 150) (y - 10) ("Welcome, " ++ (login (sndPlayerData player)) ++ " and " ++ (login (fstPlayerData player))++ "!"))
+   :(infobarText (x - 290) (y - 50) "Use keys or the mouse to choose. Press enter to continue"):[]
+
+addMenuStatsTrd :: Players -> ScreenXPos -> ScreenYPos -> [Picture]
+addMenuStatsTrd player x y =  (pictureBg 0 0):(infobarBg x y) : (menuBg 0 100): (welcomeText (-200) 100 "Player statistics"): (menuBg 0 (-50)): (welcomeText (-200) (-50) "Record board"): (menuBg 0 (-200)): (chosenText (-200) (-200) "Back"): (infobarTitle (x - 50) (y + 20) "Checkers")
+           : (infobarText (x - 150) (y - 10) ("Welcome, " ++ (login (sndPlayerData player)) ++ " and " ++ (login (fstPlayerData player)) ++ "!"))
+           :(infobarText (x - 290) (y - 50) "Use keys or the mouse to choose. Press enter to continue"): []
+
+addEndMenu :: [Picture]
+addEndMenu = (pictureBg 0 0):(infobarBg 0 0) : (infobarTitle (-180) 0 "Thanks for playing!!!"):[]
+
+addStats :: Players -> [Picture]
+addStats player = (pictureBg 0 0): (statsBgMain statsMiddleX 250) : (welcomeText (-100) 250 "Statistics")
+                                  : (statsBg statsLeftX  150) : (statsBg statsMiddleX 150) : (statsBg statsRightX  150) : (welcomeText (statsLeftX-25) 150 "Name")
+                                  : (welcomeText (statsMiddleX -50) 150 (login fst_player)) : (welcomeText (statsRightX-50) 150 (login snd_player))
+                                  : (statsBg statsLeftX  50)  : (statsBg statsMiddleX 50) : (statsBg statsRightX  50) : (welcomeText (statsLeftX-25) 50 "Wins")
+                                  : (welcomeText (statsMiddleX -50) 50 (show (wins stats1)))  : (welcomeText (statsRightX-50) 50 (show (wins stats2)))
+                                  : (statsBg statsLeftX (-50)): (statsBg statsMiddleX (-50)) : (statsBg statsRightX  (-50)) : (welcomeText (statsLeftX-25) (-50) "Draws")
+                                  : (welcomeText (statsMiddleX -50) (-50) (show (draws stats1))) : (welcomeText (statsRightX-50) (-50) (show (draws stats2)))
+                                  : (statsBg statsLeftX  (-150)) : (statsBg statsMiddleX (-150)) : (statsBg statsRightX  (-150)) : (welcomeText (statsLeftX-25) (-150) "Lost")
+                                  : (welcomeText (statsMiddleX -50) (-150) (show (losts stats1))) : (welcomeText (statsRightX-50) (-150) (show (losts stats2)))
+                                   : (statsBg statsLeftX  (-250)) : (statsBg statsMiddleX (-250)):  (statsBg statsRightX  (-250)): (welcomeText (statsLeftX-70) (-250) "moves")
+                                   : (welcomeText (statsMiddleX -50) (-250) (show (moves stats1))) : (welcomeText (statsRightX-50) (-250) (show (moves stats2))):[]
+                                  where fst_player = (fstPlayerData player)
+                                        snd_player = (sndPlayerData player)
+                                        stats1 = (stats fst_player)
+                                        stats2 = (stats snd_player)
+
+addBoardStats ::  TopTable -> [Picture]
+addBoardStats (TopTable table) = (pictureBg 0 0): (statsBgMain statsMiddleX 250) : (welcomeText (-100) 250 "Record Board")
+                                  : (statsBg statsLeftX  150) : (statsBg statsMiddleX 150) : (statsBg statsRightX  150)
+                                  : (statsBg statsLeftX  50)  : (statsBg statsMiddleX 50) : (statsBg statsRightX  50)
+                                  : (statsBg statsLeftX (-50)): (statsBg statsMiddleX (-50)) : (statsBg statsRightX  (-50))
+                                  : (statsBg statsLeftX  (-150)) : (statsBg statsMiddleX (-150)) : (statsBg statsRightX  (-150))
+                                   : (statsBg statsLeftX  (-250)) : (statsBg statsMiddleX (-250)):  (statsBg statsRightX  (-250)): (addRecords (TopTable table) 1)
+                                  where
+makeScreenYPos  :: Float ->  ScreenYPos
+makeScreenYPos    x =  (250 - (x * 100.0))
+
+
+makeTopTable :: TopTable
+makeTopTable = (TopTable ((TopTableRecord "Hi" (PlayerStats 1 2 3 4)):(TopTableRecord "Yes" (PlayerStats 1 50 8 1)):(TopTableRecord "No" (PlayerStats 1 48 9 0)):[]))
+
+addOneRecord :: TopTableRecord -> Int -> [Picture]
+addOneRecord player y = (welcomeText (statsLeftX-25) (makeScreenYPos (fromIntegral y)) ("#" ++ (show y))) :(welcomeText (statsMiddleX - 50) (makeScreenYPos (fromIntegral y))  (name player))
+        : (infobarText (statsRightX-50) ((makeScreenYPos (fromIntegral y)) + 15) ("wins  " ++ (show (wins stats))))
+        : (infobarText (statsRightX-50) ((makeScreenYPos (fromIntegral y) - 5)) ("draws  " ++ (show (draws stats))))
+        : (infobarText (statsRightX-50) ((makeScreenYPos (fromIntegral y)) - 25) ("losts  " ++ (show (losts stats)))):[]
+        where stats = (statsFromTable player)
+
+addRecords ::TopTable -> Int -> [Picture]
+addRecords (TopTable []) _ = []
+addRecords _ 7 = []
+addRecords (TopTable (player:otherPlayers)) numb = (addOneRecord player numb) ++ (addRecords (TopTable otherPlayers) (1 + numb))
+
+menuBg :: ScreenXPos -> ScreenYPos -> Picture
+menuBg x y
+  = Translate x y
+  $ Scale 6 1
+  $ unsafePerformIO (loadBMP "data/white.bmp")
+
+statsBg :: ScreenXPos -> ScreenYPos -> Picture
+statsBg x y
+  = Translate x y
+  $ Scale 2 0.8
+  $ unsafePerformIO (loadBMP "data/white.bmp")
+
+statsBgMain :: ScreenXPos -> ScreenYPos -> Picture
+statsBgMain x y
+  = Translate x y
+  $ Scale 6 0.8
+  $ unsafePerformIO (loadBMP "data/white.bmp")
+
+
+pictureBg :: ScreenXPos -> ScreenYPos -> Picture
+pictureBg x y
+  = Translate x y
+  $ Scale 0.5 0.5
+  $ unsafePerformIO (loadBMP "data/checkersbg.bmp")
 
 welcomeText :: ScreenXPos -> ScreenYPos -> String -> Picture
 welcomeText x y message
@@ -159,6 +401,12 @@ welcomeText x y message
   $ Color black
   $ Text message
 
+chosenText :: ScreenXPos -> ScreenYPos -> String -> Picture
+chosenText x y message
+  = Translate x y
+  $ Scale 0.25 0.25
+  $ Color red
+  $ Text message
 
 startText :: ScreenXPos -> ScreenYPos -> String -> Picture
 startText x y message
@@ -220,6 +468,7 @@ cell :: Bool -> ScreenXPos -> ScreenYPos -> Picture
 cell True x y = Translate (x) (y)
   $ Scale 0.5 0.5
   $ unsafePerformIO (loadBMP "data/black.bmp")
+
 cell False x y = Translate (x) (y)
   $ Scale 0.5 0.5
   $ unsafePerformIO (loadBMP "data/white.bmp")
