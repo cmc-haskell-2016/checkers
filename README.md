@@ -1,6 +1,20 @@
 # checkers
 
+
 [![Build Status](https://travis-ci.org/cmc-haskell-2016/checkers.svg?branch=master)](https://travis-ci.org/cmc-haskell-2016/checkers)
+
+## Скриншоты
+
+### Игра
+![Игра](screenshots/game.png)
+
+### Стартовая страница
+![Стартовая страница](screenshots/startpage.png)
+
+### Меню статистики
+![Меню статистики](screenshots/statistics.png)
+
+
 
 ## Установка и запуск
 
