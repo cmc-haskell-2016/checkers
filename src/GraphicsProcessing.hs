@@ -75,7 +75,7 @@ deleteLetter (Players (PlayerData a1 x1 c1 d1) (PlayerData a2 x2 c2 d2)) = (Play
 eventHandler :: ConnectionPool -> Event -> WorldObject -> WorldObject
 -- events before game
 -- promo screen. Capture any key
--- eventHandler pool (EventKey _ _ _ _) (WorldObject players checkers (State 2 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
+-- eventHandler pool pool (EventKey _ _ _ _) (WorldObject players checkers (State 2 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
 --  (WorldObject players checkers (State 1 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
 --------------------------------------------------------------------
 eventHandler pool (EventKey (Char letter) Down _ _) (WorldObject players checkers (State 2 checkerChosen posToMoveChosen checkerIsChosen) alertMessage) =
@@ -166,29 +166,29 @@ eventHandler pool (EventKey (SpecialKey KeyDown) Down _ _) (WorldObject players 
   (WorldObject players checkers (State 14 checkerChosen posToMoveChosen checkerIsChosen) alertMessage)
   ----------------------------
 -- events during game
-eventHandler pool (EventKey (SpecialKey KeyUp) Down _ _) (WorldObject players checkers (State playerId checkerChosen posToMoveChosen False) alertMessage) =
-  (WorldObject players checkers (State playerId ((mod (checkerChosen + 31 - 4) 32) + 1) posToMoveChosen False) alertMessage)
+-- eventHandler pool (EventKey (SpecialKey KeyUp) Down _ _) (WorldObject players checkers (State playerId checkerChosen posToMoveChosen False) alertMessage) =
+ -- (WorldObject players checkers (State playerId ((mod (checkerChosen + 31 - 4) 32) + 1) posToMoveChosen False) alertMessage)
 
-eventHandler pool (EventKey (SpecialKey KeyDown) Down _ _) (WorldObject players checkers (State playerId checkerChosen posToMoveChosen False) alertMessage) =
-  (WorldObject players checkers (State playerId ((mod (checkerChosen + 31 + 4) 32) + 1) posToMoveChosen False) alertMessage)
+-- eventHandler pool (EventKey (SpecialKey KeyDown) Down _ _) (WorldObject players checkers (State playerId checkerChosen posToMoveChosen False) alertMessage) =
+  --(WorldObject players checkers (State playerId ((mod (checkerChosen + 31 + 4) 32) + 1) posToMoveChosen False) alertMessage)
 
-eventHandler pool (EventKey (SpecialKey KeyLeft) Down _ _) (WorldObject players checkers (State playerId checkerChosen posToMoveChosen False) alertMessage) =
-  (WorldObject players checkers (State playerId ((mod (checkerChosen + 31 - 1) 32) + 1) posToMoveChosen False) alertMessage)
+-- eventHandler pool (EventKey (SpecialKey KeyLeft) Down _ _) (WorldObject players checkers (State playerId checkerChosen posToMoveChosen False) alertMessage) =
+  -- (WorldObject players checkers (State playerId ((mod (checkerChosen + 31 - 1) 32) + 1) posToMoveChosen False) alertMessage)
 
-eventHandler pool (EventKey (SpecialKey KeyRight) Down _ _) (WorldObject players checkers (State playerId checkerChosen posToMoveChosen False) alertMessage) =
-  (WorldObject players checkers (State playerId ((mod (checkerChosen + 31 + 1) 32) + 1) posToMoveChosen False) alertMessage)
+-- eventHandler pool (EventKey (SpecialKey KeyRight) Down _ _) (WorldObject players checkers (State playerId checkerChosen posToMoveChosen False) alertMessage) =
+  --(WorldObject players checkers (State playerId ((mod (checkerChosen + 31 + 1) 32) + 1) posToMoveChosen False) alertMessage)
 
-eventHandler pool (EventKey (SpecialKey KeyUp) Down _ _) (WorldObject players checkers (State playerId checkerChosen posToMoveChosen True) alertMessage) =
-  (WorldObject players checkers (State playerId checkerChosen ((mod (posToMoveChosen + 31 - 4) 32) + 1) True) alertMessage)
+--eventHandler pool (EventKey (SpecialKey KeyUp) Down _ _) (WorldObject players checkers (State playerId checkerChosen posToMoveChosen True) alertMessage) =
+ -- (WorldObject players checkers (State playerId checkerChosen ((mod (posToMoveChosen + 31 - 4) 32) + 1) True) alertMessage)
 
-eventHandler pool (EventKey (SpecialKey KeyDown) Down _ _) (WorldObject players checkers (State playerId checkerChosen posToMoveChosen True) alertMessage) =
-  (WorldObject players checkers (State playerId checkerChosen ((mod (posToMoveChosen + 31 + 4) 32) + 1) True) alertMessage)
+-- eventHandler pool (EventKey (SpecialKey KeyDown) Down _ _) (WorldObject players checkers (State playerId checkerChosen posToMoveChosen True) alertMessage) =
+ -- (WorldObject players checkers (State playerId checkerChosen ((mod (posToMoveChosen + 31 + 4) 32) + 1) True) alertMessage)
 
-eventHandler pool (EventKey (SpecialKey KeyLeft) Down _ _) (WorldObject players checkers (State playerId checkerChosen posToMoveChosen True) alertMessage) =
-  (WorldObject players checkers (State playerId checkerChosen ((mod (posToMoveChosen + 31 - 1) 32) + 1) True) alertMessage)
+-- eventHandler pool (EventKey (SpecialKey KeyLeft) Down _ _) (WorldObject players checkers (State playerId checkerChosen posToMoveChosen True) alertMessage) =
+ -- (WorldObject players checkers (State playerId checkerChosen ((mod (posToMoveChosen + 31 - 1) 32) + 1) True) alertMessage)
 
-eventHandler pool (EventKey (SpecialKey KeyRight) Down _ _) (WorldObject players checkers (State playerId checkerChosen posToMoveChosen True) alertMessage) =
-  (WorldObject players checkers (State playerId checkerChosen ((mod (posToMoveChosen + 31 + 1) 32) + 1) True) alertMessage)
+-- eventHandler pool (EventKey (SpecialKey KeyRight) Down _ _) (WorldObject players checkers (State playerId checkerChosen posToMoveChosen True) alertMessage) =
+ -- (WorldObject players checkers (State playerId checkerChosen ((mod (posToMoveChosen + 31 + 1) 32) + 1) True) alertMessage)
 
 -- Testing the position if there is a checker of the player to move. Game continues according to the result
 eventHandler pool (EventKey (SpecialKey KeyEnter) Down _ _) (WorldObject players checkers (State playerId checkerChosen posToMoveChosen False) alertMessage) =
@@ -199,14 +199,18 @@ eventHandler pool (EventKey (SpecialKey KeyEnter) Down _ _) (WorldObject players
   gameMove pool (WorldObject players checkers (State playerId checkerChosen posToMoveChosen False) alertMessage)
 
 -- mouse
-eventHandler pool (EventKey (MouseButton LeftButton) Down _ (x,y)) (WorldObject players checkers (State 1 checkerChosen posToMoveChosen False) alertMessage) =
-  (WorldObject players checkers (State 1 (calculateCoord x y) posToMoveChosen True) alertMessage)
+eventHandler pool (EventKey (MouseButton LeftButton) Down _ (x,y)) (WorldObject players checkers (State 1 checkerChosen posToMoveChosen False) alertMessage)
+   | (isThereChecker coord checkers (State 1 checkerChosen posToMoveChosen False)) = (WorldObject players checkers (State 1 coord posToMoveChosen True) alertMessage)
+   | otherwise = (WorldObject players checkers (State 1 coord posToMoveChosen False) alertMessage)
+   where coord = (calculateCoord x y)
 
 eventHandler pool (EventKey (MouseButton LeftButton) Down _ (x,y)) (WorldObject players checkers (State 1 checkerChosen posToMoveChosen True) alertMessage) =
   gameMove pool (WorldObject players checkers (State 1 checkerChosen (calculateCoord x y) False) alertMessage)
 
-eventHandler pool (EventKey (MouseButton LeftButton) Down _ (x,y)) (WorldObject players checkers (State 0 checkerChosen posToMoveChosen False) alertMessage) =
-  (WorldObject players checkers (State 0 (calculateCoord x y) posToMoveChosen True) alertMessage)
+eventHandler pool (EventKey (MouseButton LeftButton) Down _ (x,y)) (WorldObject players checkers (State 0 checkerChosen posToMoveChosen False) alertMessage)
+  | (isThereChecker coord checkers (State 0 checkerChosen posToMoveChosen False)) = (WorldObject players checkers (State 0 coord posToMoveChosen True) alertMessage)
+  | otherwise = (WorldObject players checkers (State 0 coord posToMoveChosen False) alertMessage)
+   where coord = (calculateCoord x y)
 
 eventHandler pool (EventKey (MouseButton LeftButton) Down _ (x,y)) (WorldObject players checkers (State 0 checkerChosen posToMoveChosen True) alertMessage) =
   gameMove pool (WorldObject players checkers (State 0 checkerChosen (calculateCoord x y) False) alertMessage)
@@ -452,7 +456,7 @@ addBoard x y checkers state
 -- Adding raws recursively. Raw contains cells, checkers numbers on cell: raws left -> black_color -> x -> y -> result_picture_list
 addRow :: Int -> Bool -> ScreenXPos -> ScreenYPos -> Checkers -> State -> [Picture]
 addRow 0 _ _ _ _ _ = []
-addRow n blackNeeded x y checkers state = (addCell 8 blackNeeded x y) ++ (addRow (n - 1) (not blackNeeded) x (y - cellOffset) checkers state) ++ (addCheckers 4 n x y checkers) ++ (addColoring 4 n x y checkers state) ++ (addNumbers 4 n x y state)
+addRow n blackNeeded x y checkers state = (addCell 8 blackNeeded x y) ++ (addRow (n - 1) (not blackNeeded) x (y - cellOffset) checkers state) ++ (addCheckers 4 n x y checkers) ++ (addColoring 4 n x y checkers state)
 
 -- just a constant cellOffset is equal to cell size (because one cell goes just after another in the row)
 cellOffset :: Float
@@ -533,12 +537,14 @@ addCheckers stepsLeft rawNumber x y checkers
 addColoring :: Int -> Int -> ScreenXPos -> ScreenYPos -> Checkers -> State -> [Picture]
 addColoring 0 _ _ _ _ _ = []
 addColoring stepsLeft rawNumber x y checkers state
+   | (checkerIsChosen state) && ((isThereChecker (checkerChosen state) checkers state) && (ifLightened (checkerChosen state) number checkers state) || (number == (checkerChosen state) ))
    = (Translate (x + if (mod rawNumber 2) == 0 then  cellOffset else 0) y
    $ Scale 1 1
 -- red or black. Red for enlightened position
-   $ Color (if (checkerIsChosen state) && (isThereChecker (checkerChosen state) checkers state) && (ifLightened (checkerChosen state) number checkers state) then red else black)
-   $ Circle 20)
+   $ Color (makeColorI 128 255 0 160)
+   $ ThickCircle  24 10)
       : addColoring (stepsLeft - 1) rawNumber (x + (2 * cellOffset)) y checkers state
+   | otherwise = addColoring (stepsLeft - 1) rawNumber (x + (2 * cellOffset)) y checkers state
       where number = (4 * (8 - rawNumber) + (4 - stepsLeft) + 1)
 
 
